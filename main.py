@@ -66,6 +66,15 @@ def add_compound(name: str, half_life: float, category: str, threshold: float = 
     db.commit()
     return {"status": "ok"}
 
+@app.delete("/api/compounds/{compound_id}")
+def delete_compound(compound_id: int, db: Session = Depends(get_db)):
+    comp = db.query(Compound).filter(Compound.id == compound_id).first()
+    if not comp:
+        raise HTTPException(status_code=404, detail="Non trovato")
+    db.delete(comp)
+    db.commit()
+    return {"status": "eliminato"}
+
 @app.post("/api/logs")
 def save_log(name: str, dose: float, db: Session = Depends(get_db)):
     db.add(InjectionLog(compound_name=name, mcg=dose))
@@ -82,13 +91,3 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
-    @app.delete("/api/compounds/{compound_id}")
-def delete_compound(compound_id: int, db: Session = Depends(get_db)):
-    comp = db.query(Compound).filter(Compound.id == compound_id).first()
-    if not comp:
-        raise HTTPException(status_code=404, detail="Non trovato")
-    db.delete(comp)
-    db.commit()
-    return {"status": "eliminato"}
-
-
