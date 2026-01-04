@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 
-# 1. Configurazione Database
+# Database
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./biotracker.db")
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
@@ -15,7 +15,7 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# 2. Modelli
+# Modelli
 class Compound(Base):
     __tablename__ = "compounds"
     id = Column(Integer, primary_key=True, index=True)
@@ -32,7 +32,6 @@ class InjectionLog(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
 Base.metadata.create_all(bind=engine)
-
 app = FastAPI()
 
 def get_db():
@@ -40,29 +39,30 @@ def get_db():
     try: yield db
     finally: db.close()
 
-# 3. Popolamento iniziale
+# Verifica Password
+@app.get("/api/verify-password")
+def verify_password(password: str):
+    stored_password = os.getenv("APP_PASSWORD", "biotracker")
+    if password == stored_password:
+        return {"status": "ok"}
+    raise HTTPException(status_code=401, detail="Accesso negato")
+
 @app.on_event("startup")
 def seed_data():
     db = SessionLocal()
-    defaults = [
-        {"name": "BPC-157", "hl": 4, "cat": "Peptide", "th": 100},
-        {"name": "Testo Enantato", "hl": 120, "cat": "Steroide", "th": 10}
-    ]
+    defaults = [{"name": "BPC-157", "hl": 4, "cat": "Peptide", "th": 100}]
     for d in defaults:
         if not db.query(Compound).filter(Compound.name == d["name"]).first():
             db.add(Compound(name=d["name"], half_life_hours=d["hl"], category=d["cat"], min_threshold=d["th"]))
     db.commit()
     db.close()
 
-# 4. API Composti (Libreria)
 @app.get("/api/compounds")
 def get_compounds(db: Session = Depends(get_db)):
     return db.query(Compound).all()
 
 @app.post("/api/compounds/add")
 def add_compound(name: str, half_life: float, category: str, threshold: float = 0, db: Session = Depends(get_db)):
-    if db.query(Compound).filter(Compound.name == name).first():
-        raise HTTPException(status_code=400, detail="Esiste già")
     new_c = Compound(name=name, half_life_hours=half_life, category=category, min_threshold=threshold)
     db.add(new_c)
     db.commit()
@@ -71,13 +71,10 @@ def add_compound(name: str, half_life: float, category: str, threshold: float = 
 @app.delete("/api/compounds/{compound_id}")
 def delete_compound(compound_id: int, db: Session = Depends(get_db)):
     comp = db.query(Compound).filter(Compound.id == compound_id).first()
-    if not comp:
-        raise HTTPException(status_code=404, detail="Composto non trovato")
     db.delete(comp)
     db.commit()
     return {"status": "eliminato"}
 
-# 5. API Log (Somministrazioni)
 @app.get("/api/logs")
 def get_logs(db: Session = Depends(get_db)):
     return db.query(InjectionLog).order_by(InjectionLog.timestamp.desc()).all()
@@ -91,27 +88,13 @@ def save_log(name: str, dose: float, db: Session = Depends(get_db)):
 @app.delete("/api/logs/{log_id}")
 def delete_log(log_id: int, db: Session = Depends(get_db)):
     log = db.query(InjectionLog).filter(InjectionLog.id == log_id).first()
-    if not log:
-        raise HTTPException(status_code=404, detail="Log non trovato")
     db.delete(log)
     db.commit()
-    return {"status": "log eliminato"}
+    return {"status": "eliminato"}
 
-# 6. Frontend
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
-
-# Aggiungi questa rotta tra le altre API nel tuo main.py
-@app.get("/api/verify-password")
-def verify_password(password: str):
-    stored_password = os.getenv("APP_PASSWORD", "biotracker") # "1234" è il default se non lo imposti su Railway
-    if password == stored_password:
-        return {"status": "ok"}
-    else:
-        raise HTTPException(status_code=401, detail="Password errata")
-
-
