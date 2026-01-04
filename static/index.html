@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BioTracker Pro v3.5</title>
+    <title>BioTracker Pro v4.0</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -32,8 +32,8 @@
                 <div class="bg-slate-900/50 p-3 rounded-2xl border border-slate-700 text-center">
                     <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nel Vial</label>
                     <div class="flex items-center justify-center">
-                        <input type="number" v-model="form.vial_total" class="bg-transparent w-16 text-center font-bold outline-none">
-                        <select v-model="form.unitType" class="bg-slate-700 text-[9px] rounded px-1 uppercase">
+                        <input type="number" v-model="form.vial_total" class="bg-transparent w-16 text-center font-bold outline-none text-white">
+                        <select v-model="form.unitType" class="bg-slate-700 text-[9px] rounded px-1 uppercase text-white border-none outline-none">
                             <option value="mg">mg</option>
                             <option value="ui">ui</option>
                         </select>
@@ -41,26 +41,33 @@
                 </div>
                 <div class="bg-slate-900/50 p-3 rounded-2xl border border-slate-700 text-center">
                     <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">ML Acqua</label>
-                    <input type="number" v-model="form.water_ml" class="bg-transparent w-full text-center font-bold outline-none">
+                    <input type="number" v-model="form.water_ml" class="bg-transparent w-full text-center font-bold outline-none text-white">
                 </div>
             </div>
 
-            <div v-else class="mb-4 bg-slate-900/50 p-4 rounded-2xl border border-slate-700 text-center">
+            <div v-else class="mb-4 bg-slate-900/50 p-4 rounded-2xl border border-slate-700 text-center text-white">
                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Concentrazione (mg/ml)</label>
                 <input type="number" v-model="form.concentration" class="bg-transparent w-full text-center font-bold text-xl outline-none">
             </div>
 
             <div class="mb-6">
-                <label class="block text-xs font-bold text-slate-400 uppercase text-center mb-2">Dose desiderata (mcg)</label>
-                <input type="number" v-model="form.target_dose" class="w-full bg-slate-900 p-5 rounded-3xl text-center text-5xl font-black text-blue-400 border-2 border-blue-500/20 shadow-inner outline-none">
+                <label class="block text-xs font-bold text-slate-400 uppercase text-center mb-2">Dose desiderata</label>
+                <div class="relative bg-slate-900 rounded-3xl border-2 border-blue-500/20 shadow-inner overflow-hidden">
+                    <input type="number" v-model="form.target_dose" class="w-full bg-transparent p-5 pr-20 text-center text-5xl font-black text-blue-400 outline-none">
+                    <select v-model="form.targetUnit" class="absolute right-4 top-1/2 -translate-y-1/2 bg-slate-800 text-blue-400 font-bold p-2 rounded-xl text-xs uppercase border border-blue-500/30">
+                        <option value="mcg">mcg</option>
+                        <option value="mg">mg</option>
+                        <option value="ui">ui</option>
+                    </select>
+                </div>
             </div>
 
             <div v-if="calcResult" class="bg-blue-600/20 p-5 rounded-3xl text-center mb-6 border border-blue-500/30">
-                <div class="text-6xl font-black leading-none">{{ calcResult.ui }}<span class="text-2xl ml-1 text-blue-400 font-bold uppercase">ui</span></div>
+                <div class="text-6xl font-black leading-none text-white">{{ calcResult.ui }}<span class="text-2xl ml-1 text-blue-400 font-bold uppercase">ui</span></div>
                 <div class="text-sm font-bold text-slate-400 mt-2 italic">Volume siringa: {{ calcResult.ml }} ml</div>
             </div>
 
-            <button @click="saveEntry" class="w-full bg-blue-600 hover:bg-blue-500 p-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl active:scale-95">
+            <button @click="saveEntry" class="w-full bg-blue-600 hover:bg-blue-500 p-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 text-white">
                 Salva Somministrazione
             </button>
         </div>
@@ -68,9 +75,17 @@
         <div class="bg-slate-800/50 p-5 rounded-3xl mb-8 border border-dashed border-slate-600">
             <details>
                 <summary class="text-xs font-black text-slate-400 uppercase cursor-pointer text-center list-none">
-                    + Aggiungi Nuovo Compost
+                    Gestisci Libreria
                 </summary>
-                <div class="mt-6 space-y-4">
+                
+                <div class="mt-4 space-y-2 mb-6">
+                    <div v-for="c in compounds" :key="c.id" class="flex justify-between items-center bg-slate-900/50 p-2 px-4 rounded-xl border border-slate-700">
+                        <span class="text-sm font-bold">{{ c.name }}</span>
+                        <button @click="deleteCompound(c.id)" class="text-red-500 font-black px-2 hover:bg-red-500/10 rounded-lg transition-all">✕</button>
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-4 border-t border-slate-700">
                     <input v-model="newComp.name" type="text" placeholder="Nome (es. Peg-MGF)" class="w-full bg-slate-800 p-4 rounded-xl border border-slate-700 outline-none">
                     <div class="grid grid-cols-2 gap-3">
                         <input v-model="newComp.half_life" type="number" placeholder="Emivita (h)" class="w-full bg-slate-800 p-4 rounded-xl border border-slate-700 outline-none">
@@ -81,13 +96,13 @@
                         <option value="Steroide">Steroide</option>
                     </select>
                     <button @click="addNewCompound" class="w-full bg-slate-100 text-slate-900 p-4 rounded-xl font-black uppercase tracking-widest text-xs">
-                        Salva in Libreria
+                        Aggiungi Nuovo
                     </button>
                 </div>
             </details>
         </div>
 
-        <div v-for="log in logs.slice(0,5)" :key="log.id" class="bg-slate-800/40 p-4 rounded-2xl mb-2 flex justify-between items-center border border-slate-700">
+        <div v-for="log in logs.slice(0,5)" :key="log.id" class="bg-slate-800/40 p-4 rounded-2xl mb-2 flex justify-between items-center border border-slate-700 text-white">
             <div>
                 <div class="font-bold text-sm">{{ log.compound_name }}</div>
                 <div class="text-[10px] text-slate-500 uppercase">{{ formatDate(log.timestamp) }}</div>
@@ -103,22 +118,32 @@
                 return {
                     compounds: [], logs: [], chart: null,
                     newComp: { name: '', half_life: 24, category: 'Peptide', threshold: 0 },
-                    form: { compound: null, isLiquid: false, vial_total: 5, unitType: 'mg', water_ml: 2, target_dose: 250, concentration: 250 },
+                    form: { 
+                        compound: null, isLiquid: false, vial_total: 5, unitType: 'mg', 
+                        water_ml: 2, target_dose: 250, concentration: 250, targetUnit: 'mcg' 
+                    },
                     chartColors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6']
                 }
             },
             computed: {
                 calcResult() {
+                    if (!this.form.compound || !this.form.target_dose) return null;
+                    
+                    // Convertiamo la dose target in MCG per il calcolo
+                    let targetInMcg = parseFloat(this.form.target_dose);
+                    if(this.form.targetUnit === 'mg') targetInMcg *= 1000;
+                    if(this.form.targetUnit === 'ui') targetInMcg *= 1; // UI dipende dal vial, qui lo trattiamo come unità base se non mg
+
                     let ui = 0;
                     if (this.form.isLiquid) {
-                        ui = (this.form.target_dose / this.form.concentration) * 100;
+                        ui = (targetInMcg / (this.form.concentration * 1000)) * 100;
                     } else {
                         const total_mcg = this.form.unitType === 'mg' ? this.form.vial_total * 1000 : this.form.vial_total;
                         const mcg_per_ml = total_mcg / this.form.water_ml;
-                        ui = (this.form.target_dose / mcg_per_ml) * 100;
+                        ui = (targetInMcg / mcg_per_ml) * 100;
                     }
                     if (!ui || isNaN(ui) || !isFinite(ui)) return null;
-                    return { ui: ui.toFixed(1), ml: (ui / 100).toFixed(2) };
+                    return { ui: ui.toFixed(1), ml: (ui / 100).toFixed(2), dose_mcg: targetInMcg };
                 }
             },
             methods: {
@@ -130,16 +155,20 @@
                     this.renderChart();
                 },
                 async addNewCompound() {
-                    if(!this.newComp.name || !this.newComp.half_life) return alert("Inserisci Nome ed Emivita!");
+                    if(!this.newComp.name || !this.newComp.half_life) return alert("Dati mancanti!");
                     const url = `/api/compounds/add?name=${encodeURIComponent(this.newComp.name)}&half_life=${this.newComp.half_life}&category=${this.newComp.category}&threshold=${this.newComp.threshold || 0}`;
                     await fetch(url, { method: 'POST' });
-                    this.newComp.name = ''; this.newComp.half_life = 24; this.newComp.threshold = 0;
-                    await this.loadData();
-                    alert("Aggiunto!");
+                    this.newComp.name = ''; this.loadData();
+                },
+                async deleteCompound(id) {
+                    if(confirm("Eliminare questo composto?")) {
+                        await fetch(`/api/compounds/${id}`, { method: 'DELETE' });
+                        this.loadData();
+                    }
                 },
                 async saveEntry() {
-                    if(!this.form.compound) return;
-                    await fetch(`/api/logs?name=${encodeURIComponent(this.form.compound.name)}&dose=${this.form.target_dose}`, { method: 'POST' });
+                    if(!this.form.compound || !this.calcResult) return;
+                    await fetch(`/api/logs?name=${encodeURIComponent(this.form.compound.name)}&dose=${this.calcResult.dose_mcg}`, { method: 'POST' });
                     this.loadData();
                 },
                 formatDate(date) {
@@ -175,12 +204,12 @@
                         datasets.push({
                             label: compName,
                             data: dataPoints.map((v, i) => i <= pastHours ? v : null),
-                            borderColor: color, borderWidth: 3, pointRadius: 0, tension: 0.4
+                            borderColor: color, borderWidth: 3, pointRadius: 0, tension: 0.4, fill: false
                         });
                         datasets.push({
-                            label: compName + ' (Previsione)',
+                            label: compName + '...',
                             data: dataPoints.map((v, i) => i >= pastHours ? v : null),
-                            borderColor: color, borderDash: [5, 5], borderWidth: 2, pointRadius: 0, tension: 0.4
+                            borderColor: color, borderDash: [5, 5], borderWidth: 2, pointRadius: 0, tension: 0.4, fill: false
                         });
                     });
 
@@ -188,7 +217,7 @@
                         type: 'line',
                         data: { labels, datasets },
                         options: {
-                            plugins: { legend: { display: true, labels: { color: '#94a3b8', font: { size: 8 }, boxWidth: 6 } } },
+                            plugins: { legend: { display: true, labels: { color: '#94a3b8', font: { size: 8 } } } },
                             scales: {
                                 y: { beginAtZero: true, grid: { color: '#1e293b' }, ticks: { display: false } },
                                 x: { grid: { color: (c) => c.tick.label === "Ora" ? "#3b82f6" : "transparent" }, ticks: { color: '#475569', font: { size: 8 } } }
