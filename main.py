@@ -104,3 +104,14 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
+# Aggiungi questa rotta tra le altre API nel tuo main.py
+@app.get("/api/verify-password")
+def verify_password(password: str):
+    stored_password = os.getenv("APP_PASSWORD", "biotracker") # "1234" è il default se non lo imposti su Railway
+    if password == stored_password:
+        return {"status": "ok"}
+    else:
+        raise HTTPException(status_code=401, detail="Password errata")
+
+
