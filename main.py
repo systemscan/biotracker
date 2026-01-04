@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 
-# Configurazione Database
+# 1. Configurazione Database
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./biotracker.db")
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
@@ -15,7 +15,7 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Modelli
+# 2. Modelli
 class Compound(Base):
     __tablename__ = "compounds"
     id = Column(Integer, primary_key=True, index=True)
@@ -40,6 +40,7 @@ def get_db():
     try: yield db
     finally: db.close()
 
+# 3. Popolamento iniziale
 @app.on_event("startup")
 def seed_data():
     db = SessionLocal()
@@ -53,6 +54,7 @@ def seed_data():
     db.commit()
     db.close()
 
+# 4. API Composti (Libreria)
 @app.get("/api/compounds")
 def get_compounds(db: Session = Depends(get_db)):
     return db.query(Compound).all()
@@ -70,10 +72,15 @@ def add_compound(name: str, half_life: float, category: str, threshold: float = 
 def delete_compound(compound_id: int, db: Session = Depends(get_db)):
     comp = db.query(Compound).filter(Compound.id == compound_id).first()
     if not comp:
-        raise HTTPException(status_code=404, detail="Non trovato")
+        raise HTTPException(status_code=404, detail="Composto non trovato")
     db.delete(comp)
     db.commit()
     return {"status": "eliminato"}
+
+# 5. API Log (Somministrazioni)
+@app.get("/api/logs")
+def get_logs(db: Session = Depends(get_db)):
+    return db.query(InjectionLog).order_by(InjectionLog.timestamp.desc()).all()
 
 @app.post("/api/logs")
 def save_log(name: str, dose: float, db: Session = Depends(get_db)):
@@ -81,17 +88,7 @@ def save_log(name: str, dose: float, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "ok"}
 
-@app.get("/api/logs")
-def get_logs(db: Session = Depends(get_db)):
-    return db.query(InjectionLog).order_by(InjectionLog.timestamp.desc()).all()
-
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
-
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.getenv("PORT", 8080))
-    uvicorn.run(app, host="0.0.0.0", port=port)
-    @app.delete("/api/logs/{log_id}")
+@app.delete("/api/logs/{log_id}")
 def delete_log(log_id: int, db: Session = Depends(get_db)):
     log = db.query(InjectionLog).filter(InjectionLog.id == log_id).first()
     if not log:
@@ -100,4 +97,10 @@ def delete_log(log_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "log eliminato"}
 
+# 6. Frontend
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)
