@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BioTracker Pro v5.1</title>
+    <title>BioTracker Pro v5.2</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -18,9 +18,9 @@
     <div id="app">
         <div v-if="!isAuthenticated" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6 text-center">
             <div class="w-full max-w-xs">
-                <h1 class="text-4xl font-black text-blue-500 mb-6 italic tracking-tighter">BIOTRACKER</h1>
-                <input type="password" v-model="passInput" placeholder="PIN" @keyup.enter="checkPassword" class="w-full bg-slate-800 p-4 rounded-2xl border-2 border-slate-700 text-center text-2xl mb-4 text-white">
-                <button @click="checkPassword" class="w-full bg-blue-600 p-4 rounded-2xl font-black uppercase text-white">Sblocca</button>
+                <h1 class="text-4xl font-black text-blue-500 mb-6 italic tracking-tighter uppercase">BioTracker</h1>
+                <input type="password" v-model="passInput" placeholder="PIN" @keyup.enter="checkPassword" class="w-full bg-slate-800 p-4 rounded-2xl border-2 border-slate-700 text-center text-2xl mb-4 text-white outline-none">
+                <button @click="checkPassword" class="w-full bg-blue-600 p-4 rounded-2xl font-black uppercase text-white shadow-lg active:scale-95 transition">Sblocca</button>
             </div>
         </div>
 
@@ -30,30 +30,30 @@
             </div>
 
             <div class="bg-slate-800 p-6 rounded-3xl shadow-2xl mb-6 border border-slate-700">
-                <select v-model="selectedCompoundName" @change="loadCompoundSettings" class="w-full bg-slate-700 p-4 rounded-2xl mb-4 border border-slate-600 font-bold text-center text-white outline-none">
+                <select v-model="selectedCompoundName" @change="loadCompoundSettings" class="w-full bg-slate-700 p-4 rounded-2xl mb-4 border border-slate-600 font-bold text-center text-white outline-none appearance-none">
                     <option v-for="c in compounds" :key="c.id" :value="c.name">{{ c.name }}</option>
                 </select>
 
                 <div class="flex gap-2 mb-6 bg-slate-900 p-1 rounded-xl">
-                    <button @click="form.isLiquid = false" :class="!form.isLiquid ? 'bg-blue-600 shadow-lg text-white' : 'text-slate-500'" class="flex-1 py-2 text-xs rounded-lg font-black uppercase">Polvere</button>
-                    <button @click="form.isLiquid = true" :class="form.isLiquid ? 'bg-blue-600 shadow-lg text-white' : 'text-slate-500'" class="flex-1 py-2 text-xs rounded-lg font-black uppercase">Liquido</button>
+                    <button @click="form.isLiquid = false" :class="!form.isLiquid ? 'bg-blue-600 shadow-lg text-white' : 'text-slate-500'" class="flex-1 py-2 text-xs rounded-lg font-black uppercase transition-all">Polvere</button>
+                    <button @click="form.isLiquid = true" :class="form.isLiquid ? 'bg-blue-600 shadow-lg text-white' : 'text-slate-500'" class="flex-1 py-2 text-xs rounded-lg font-black uppercase transition-all">Liquido</button>
                 </div>
 
                 <div v-if="!form.isLiquid" class="grid grid-cols-2 gap-4 mb-4">
                     <div class="bg-slate-900/50 p-3 rounded-2xl border border-slate-700 text-center">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 italic">Vial Totale</label>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Vial Totale</label>
                         <div class="flex items-center justify-center">
                             <input type="number" v-model="form.vial_total" class="bg-transparent w-16 text-center font-bold text-white outline-none">
-                            <select v-model="form.unitType" class="bg-slate-700 text-[9px] rounded px-1 uppercase text-blue-400 font-bold">
+                            <select v-model="form.unitType" class="bg-slate-700 text-[9px] rounded px-1 uppercase text-blue-400 font-bold border-none outline-none">
                                 <option value="mcg">mcg</option>
                                 <option value="mg">mg</option>
                                 <option value="ui">ui</option>
                             </select>
                         </div>
                     </div>
-                    <div class="bg-slate-900/50 p-3 rounded-2xl border border-slate-700 text-center">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 italic">ML Acqua (BAC)</label>
-                        <input type="number" v-model="form.water_ml" class="bg-transparent w-full text-center font-bold text-white outline-none">
+                    <div class="bg-slate-900/50 p-3 rounded-2xl border border-slate-700 text-center text-white">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">ML Acqua</label>
+                        <input type="number" v-model="form.water_ml" class="bg-transparent w-full text-center font-bold outline-none">
                     </div>
                 </div>
 
@@ -61,7 +61,7 @@
                     <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 italic">Concentrazione (per 1 ML)</label>
                     <div class="flex items-center justify-center">
                         <input type="number" v-model="form.concentration" class="bg-transparent w-20 text-center font-bold text-xl outline-none">
-                        <select v-model="form.liqUnit" class="bg-slate-700 text-[10px] rounded px-2 uppercase text-blue-400 font-bold">
+                        <select v-model="form.liqUnit" class="bg-slate-700 text-[10px] rounded px-2 uppercase text-blue-400 font-bold border-none outline-none">
                             <option value="mcg">mcg</option>
                             <option value="mg">mg</option>
                             <option value="ui">ui</option>
@@ -70,7 +70,7 @@
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-xs font-bold text-slate-400 uppercase text-center mb-2 font-black">Quanto vuoi iniettare?</label>
+                    <label class="block text-xs font-bold text-slate-400 uppercase text-center mb-2 font-black">Dose Desiderata</label>
                     <div class="relative bg-slate-900 rounded-3xl border-2 border-blue-500/20 shadow-inner">
                         <input type="number" v-model="form.target_dose" class="w-full bg-transparent p-5 pr-20 text-center text-5xl font-black text-blue-400 outline-none">
                         <select v-model="form.targetUnit" class="absolute right-4 top-1/2 -translate-y-1/2 bg-slate-800 text-blue-400 font-bold p-2 rounded-xl text-xs uppercase border border-blue-500/30 outline-none">
@@ -83,9 +83,9 @@
 
                 <div class="mb-6 bg-slate-900/30 p-4 rounded-2xl border border-slate-700/50">
                     <div class="flex justify-between items-center mb-4">
-                        <span class="text-[10px] font-black text-slate-500 uppercase">Scegli Siringa:</span>
+                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Siringa:</span>
                         <div class="flex gap-2">
-                            <button v-for="s in [0.3, 0.5, 1.0]" @click="form.syringeSize = s" :class="form.syringeSize == s ? 'bg-blue-600 text-white border-blue-400' : 'bg-slate-700 text-slate-400 border-slate-600'" class="px-3 py-1 rounded-lg text-xs font-black border transition-all">
+                            <button v-for="s in [0.3, 0.5, 1.0]" :key="s" @click="form.syringeSize = s" :class="form.syringeSize == s ? 'bg-blue-600 text-white border-blue-400' : 'bg-slate-700 text-slate-400 border-slate-600'" class="px-3 py-1 rounded-lg text-xs font-black border transition-all">
                                 {{ s }}ml
                             </button>
                         </div>
@@ -93,7 +93,7 @@
                     
                     <div v-if="calcResult" class="syringe-body">
                         <div class="syringe-level" :class="{'syringe-over': parseFloat(calcResult.ml) > form.syringeSize}" :style="{ width: Math.min((parseFloat(calcResult.ml) / form.syringeSize) * 100, 100) + '%' }"></div>
-                        <div v-for="mark in 5" class="mark" :style="{ left: (mark * 20) + '%' }">{{ (form.syringeSize * mark / 5).toFixed(1) }}</div>
+                        <div v-for="mark in 5" :key="mark" class="mark" :style="{ left: (mark * 20) + '%' }">{{ (form.syringeSize * mark / 5).toFixed(1) }}</div>
                     </div>
                     
                     <div v-if="calcResult" class="flex justify-between mt-4">
@@ -110,8 +110,8 @@
             <div v-for="log in logs.slice(0,5)" :key="log.id" class="bg-slate-800/40 p-4 rounded-2xl mb-2 flex justify-between items-center border border-slate-700 text-white">
                 <div><div class="font-bold text-sm">{{ log.compound_name }}</div><div class="text-[10px] text-slate-500 uppercase">{{ formatDate(log.timestamp) }}</div></div>
                 <div class="flex items-center gap-4">
-                    <div class="text-blue-400 font-black text-lg">{{ log.mcg }}<span class="text-[10px] ml-1 uppercase text-slate-500">mcg</span></div>
-                    <button @click="deleteLog(log.id)" class="text-red-500/40 text-xs font-bold">✕</button>
+                    <div class="text-blue-400 font-black text-lg">{{ log.mcg }}<span class="text-[10px] ml-1 uppercase text-slate-500 font-normal">mcg</span></div>
+                    <button @click="deleteLog(log.id)" class="text-red-500/40 text-xs font-bold hover:text-red-500 transition">✕</button>
                 </div>
             </div>
 
@@ -120,13 +120,13 @@
                 <div class="mt-4 space-y-4">
                     <div v-for="c in compounds" :key="c.id" class="flex justify-between items-center bg-slate-900/50 p-2 px-4 rounded-xl border border-slate-700">
                         <span class="text-xs font-bold">{{ c.name }}</span>
-                        <button @click="deleteCompound(c.id)" class="text-red-500 text-xs">ELIMINA</button>
+                        <button @click="deleteCompound(c.id)" class="text-red-500 text-[10px] font-black uppercase">Elimina</button>
                     </div>
-                    <div class="pt-4 border-t border-slate-700 space-y-2">
-                        <input v-model="newComp.name" placeholder="Nome Sostanza" class="w-full bg-slate-800 p-3 rounded-xl border border-slate-700 text-sm">
+                    <div class="pt-4 border-t border-slate-700 space-y-2 text-white">
+                        <input v-model="newComp.name" placeholder="Nome Sostanza" class="w-full bg-slate-800 p-3 rounded-xl border border-slate-700 text-sm outline-none">
                         <div class="grid grid-cols-2 gap-2">
-                            <input v-model="newComp.half_life" type="number" placeholder="Emivita (h)" class="bg-slate-800 p-3 rounded-xl border border-slate-700 text-sm">
-                            <input v-model="newComp.threshold" type="number" placeholder="Soglia (mcg)" class="bg-slate-800 p-3 rounded-xl border border-slate-700 text-sm">
+                            <input v-model="newComp.half_life" type="number" placeholder="Emivita (h)" class="w-full bg-slate-800 p-3 rounded-xl border border-slate-700 text-sm outline-none">
+                            <input v-model="newComp.threshold" type="number" placeholder="Soglia (mcg)" class="w-full bg-slate-800 p-3 rounded-xl border border-slate-700 text-sm outline-none">
                         </div>
                         <button @click="addNewCompound" class="w-full bg-slate-100 text-slate-900 p-3 rounded-xl font-black uppercase text-xs">Aggiungi</button>
                     </div>
@@ -142,19 +142,15 @@
                 return {
                     isAuthenticated: false, passInput: '', compounds: [], logs: [], chart: null, selectedCompoundName: '',
                     newComp: { name: '', half_life: 24, threshold: 0 },
-                    form: { compound: null, isLiquid: false, vial_total: 5, unitType: 'mg', water_ml: 2, target_dose: 250, targetUnit: 'mcg', concentration: 250, liqUnit: 'mg', syringeSize: 1.0 }
+                    form: { compound: null, isLiquid: false, vial_total: 5, unitType: 'mg', water_ml: 2, target_dose: 250, targetUnit: 'mcg', concentration: 250, liqUnit: 'mg', syringeSize: 1.0 },
+                    chartColors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6']
                 }
             },
             computed: {
                 calcResult() {
                     if (!this.form.compound || !this.form.target_dose) return null;
-                    
-                    // 1. Normalizza Target Dose in MCG
                     let targetInMcg = parseFloat(this.form.target_dose);
                     if(this.form.targetUnit === 'mg') targetInMcg *= 1000;
-                    if(this.form.targetUnit === 'ui') targetInMcg *= 1; 
-
-                    // 2. Normalizza Concentrazione in MCG/ML
                     let mcgPerMl = 0;
                     if (this.form.isLiquid) {
                         mcgPerMl = parseFloat(this.form.concentration);
@@ -164,12 +160,9 @@
                         if(this.form.unitType === 'mg') totalVialMcg *= 1000;
                         mcgPerMl = totalVialMcg / parseFloat(this.form.water_ml);
                     }
-
                     if (mcgPerMl <= 0) return null;
-                    const mlToDraw = targetInMcg / mcgPerMl;
-                    const uiToDraw = mlToDraw * 100;
-                    
-                    return { ui: uiToDraw.toFixed(1), ml: mlToDraw.toFixed(3), dose_mcg: targetInMcg };
+                    const ml = targetInMcg / mcgPerMl;
+                    return { ui: (ml * 100).toFixed(1), ml: ml.toFixed(3), dose_mcg: targetInMcg };
                 }
             },
             methods: {
@@ -178,60 +171,98 @@
                     localStorage.setItem('prefs_' + this.form.compound.name, JSON.stringify(this.form));
                 },
                 loadCompoundSettings() {
-                    this.form.compound = this.compounds.find(c => c.name === this.selectedCompoundName);
                     const saved = localStorage.getItem('prefs_' + this.selectedCompoundName);
-                    if (saved) { Object.assign(this.form, JSON.parse(saved)); }
+                    const comp = this.compounds.find(c => c.name === this.selectedCompoundName);
+                    if (comp) {
+                        this.form.compound = comp;
+                        if (saved) Object.assign(this.form, JSON.parse(saved));
+                    }
                 },
                 async checkPassword() {
-                    const res = await fetch(`/api/verify-password?password=${encodeURIComponent(this.passInput)}`);
-                    if(res.ok) { localStorage.setItem('biotracker_auth', 'true'); this.isAuthenticated = true; this.loadData(); }
-                    else { alert("PIN Errato"); }
+                    try {
+                        const res = await fetch(`/api/verify-password?password=${encodeURIComponent(this.passInput)}`);
+                        if(res.ok) { localStorage.setItem('biotracker_auth', 'true'); this.isAuthenticated = true; await this.loadData(); }
+                        else { alert("PIN Errato"); }
+                    } catch(e) { alert("Server Error"); }
                 },
                 async loadData() {
-                    const [cRes, lRes] = await Promise.all([fetch('/api/compounds'), fetch('/api/logs')]);
-                    this.compounds = await cRes.json();
-                    this.logs = await lRes.json();
-                    if(this.compounds.length && !this.selectedCompoundName) { this.selectedCompoundName = this.compounds[0].name; this.loadCompoundSettings(); }
-                    this.$nextTick(() => { this.renderChart(); });
+                    try {
+                        const [cRes, lRes] = await Promise.all([fetch('/api/compounds'), fetch('/api/logs')]);
+                        this.compounds = await cRes.json();
+                        this.logs = await lRes.json();
+                        if(this.compounds.length && !this.selectedCompoundName) {
+                            this.selectedCompoundName = this.compounds[0].name;
+                            this.loadCompoundSettings();
+                        }
+                        this.$nextTick(() => { this.renderChart(); });
+                    } catch(e) { console.error(e); }
                 },
                 async saveEntry() {
+                    if(!this.form.compound || !this.calcResult) return;
                     this.saveCompoundSettings();
                     await fetch(`/api/logs?name=${encodeURIComponent(this.form.compound.name)}&dose=${this.calcResult.dose_mcg}`, { method: 'POST' });
-                    this.loadData();
+                    await this.loadData();
                 },
                 async addNewCompound() {
+                    if(!this.newComp.name) return;
                     await fetch(`/api/compounds/add?name=${encodeURIComponent(this.newComp.name)}&half_life=${this.newComp.half_life}&category=P&threshold=${this.newComp.threshold}`, { method: 'POST' });
                     this.newComp = { name: '', half_life: 24, threshold: 0 };
-                    this.loadData();
+                    await this.loadData();
                 },
-                async deleteCompound(id) { if(confirm("Eliminare?")) { await fetch(`/api/compounds/${id}`, { method: 'DELETE' }); this.loadData(); } },
-                async deleteLog(id) { if(confirm("Eliminare?")) { await fetch(`/api/logs/${id}`, { method: 'DELETE' }); this.loadData(); } },
+                async deleteCompound(id) { if(confirm("Eliminare?")) { await fetch(`/api/compounds/${id}`, { method: 'DELETE' }); await this.loadData(); } },
+                async deleteLog(id) { if(confirm("Eliminare?")) { await fetch(`/api/logs/${id}`, { method: 'DELETE' }); await this.loadData(); } },
                 formatDate(d) { return new Date(d).toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}); },
                 renderChart() {
-                    const ctx = document.getElementById('bloodLevelChart'); if(!ctx) return; if(this.chart) this.chart.destroy();
+                    const canvas = document.getElementById('bloodLevelChart');
+                    if(!canvas || this.logs.length === 0) return;
+                    if(this.chart) this.chart.destroy();
+                    
                     const past = 48, future = 24, now = new Date();
                     const labels = []; for(let i = -past; i <= future; i++) labels.push(i === 0 ? "Ora" : i + "h");
-                    const unique = [...new Set(this.logs.map(l => l.compound_name))];
-                    const datasets = unique.map((name, idx) => {
+                    
+                    const uniqueNames = [...new Set(this.logs.map(l => l.compound_name))];
+                    const datasets = [];
+
+                    uniqueNames.forEach((name, idx) => {
                         const info = this.compounds.find(c => c.name === name);
                         const hl = info ? info.half_life_hours : 24;
                         const color = this.chartColors[idx % 5];
-                        const data = [];
+                        const points = [];
+                        
                         for(let i = -past; i <= future; i++) {
-                            const time = new Date(now.getTime() + (i * 3600000));
+                            const timeAtStep = new Date(now.getTime() + (i * 3600000));
                             let val = 0;
                             this.logs.filter(l => l.compound_name === name).forEach(log => {
-                                const diff = (time - new Date(log.timestamp)) / 3600000;
+                                const diff = (timeAtStep - new Date(log.timestamp)) / 3600000;
                                 if(diff >= 0) val += log.mcg * Math.pow(0.5, diff / hl);
                             });
-                            data.push(val);
+                            points.push(val);
                         }
-                        return [
-                            { label: name, data: data.map((v, i) => i <= past ? v : null), borderColor: color, borderWidth: 3, pointRadius: 0, tension: 0.4, fill: false },
-                            { label: name + '...', data: data.map((v, i) => i >= past ? v : null), borderColor: color, borderDash: [5, 5], borderWidth: 2, pointRadius: 0, tension: 0.4, fill: false }
-                        ];
-                    }).flat();
-                    this.chart = new Chart(ctx.getContext('2d'), { type: 'line', data: { labels, datasets }, options: { responsive: true, plugins: { legend: { display: true, labels: { color: '#94a3b8', font: { size: 8 } } } }, scales: { y: { display: false }, x: { grid: { color: (c) => c.tick.label === "Ora" ? "#3b82f6" : "transparent" }, ticks: { color: '#475569', font: { size: 8 } } } } } });
+                        
+                        datasets.push({
+                            label: name,
+                            data: points.map((v, i) => i <= past ? v : null),
+                            borderColor: color, borderWidth: 3, pointRadius: 0, tension: 0.4, fill: false
+                        });
+                        datasets.push({
+                            label: name + ' (Prev)',
+                            data: points.map((v, i) => i >= past ? v : null),
+                            borderColor: color, borderDash: [5, 5], borderWidth: 2, pointRadius: 0, tension: 0.4, fill: false
+                        });
+                    });
+
+                    this.chart = new Chart(canvas.getContext('2d'), {
+                        type: 'line',
+                        data: { labels, datasets },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: true, labels: { color: '#94a3b8', font: { size: 8 } } } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: '#1e293b' }, ticks: { display: false } },
+                                x: { grid: { color: (c) => c.tick.label === "Ora" ? "#3b82f6" : "transparent" }, ticks: { color: '#475569', font: { size: 8 } } }
+                            }
+                        }
+                    });
                 }
             },
             mounted() { if(localStorage.getItem('biotracker_auth') === 'true') { this.isAuthenticated = true; this.loadData(); } }
