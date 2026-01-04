@@ -3,53 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BioTracker</title>
+    <title>BioTracker Pro</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans">
     <div id="app" class="max-w-md mx-auto p-4">
-        <h1 class="text-3xl font-bold text-blue-500 mb-6 text-center">BioTracker Pro</h1>
+        <h1 class="text-3xl font-bold text-blue-500 mb-6 text-center tracking-tight">BioTracker Pro</h1>
 
-        <div class="bg-slate-800 p-6 rounded-2xl shadow-xl mb-6">
-            <label class="block mb-2 text-sm uppercase font-bold text-slate-400">Sostanza</label>
-            <select v-model="form.compound" class="w-full bg-slate-700 p-3 rounded-lg mb-4 text-white">
+        <div class="bg-slate-800 p-6 rounded-2xl shadow-xl mb-6 border border-slate-700">
+            <label class="block mb-2 text-xs uppercase font-black text-slate-400">Sostanza da usare</label>
+            <select v-model="form.compound" class="w-full bg-slate-700 p-3 rounded-lg mb-4 text-white border border-slate-600 focus:border-blue-500 outline-none">
                 <option v-for="c in compounds" :key="c.id" :value="c">{{ c.name }}</option>
             </select>
 
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block mb-1 text-xs">MG nel Vial</label>
-                    <input type="number" v-model="form.vial_mg" class="w-full bg-slate-700 p-2 rounded">
+                    <label class="block mb-1 text-[10px] uppercase font-bold text-slate-500">MG nel Vial</label>
+                    <input type="number" v-model="form.vial_mg" class="w-full bg-slate-700 p-2 rounded-lg border border-slate-600">
                 </div>
                 <div>
-                    <label class="block mb-1 text-xs">ML Acqua</label>
-                    <input type="number" v-model="form.water_ml" class="w-full bg-slate-700 p-2 rounded">
+                    <label class="block mb-1 text-[10px] uppercase font-bold text-slate-500">ML Acqua (BAC)</label>
+                    <input type="number" v-model="form.water_ml" class="w-full bg-slate-700 p-2 rounded-lg border border-slate-600">
                 </div>
             </div>
 
-            <label class="block mb-1 text-xs text-center">Dose desiderata (MCG)</label>
-            <input type="number" v-model="form.target_mcg" class="w-full bg-slate-700 p-3 rounded mb-4 text-center text-xl font-bold">
+            <label class="block mb-1 text-[10px] uppercase font-bold text-slate-500 text-center">Dose desiderata (MCG)</label>
+            <input type="number" v-model="form.target_mcg" class="w-full bg-slate-700 p-3 rounded-xl mb-4 text-center text-2xl font-black text-blue-400 border border-slate-600">
 
-            <div v-if="units !== null" class="bg-blue-900/40 p-4 rounded-xl text-center mb-4">
-                <p class="text-sm text-blue-300">Aspira in siringa:</p>
-                <p class="text-4xl font-black">{{ units }} <span class="text-lg">Unità</span></p>
-                <p class="text-[10px] mt-1 text-slate-400 italic">Basato su siringa U-100</p>
+            <div v-if="units !== null" class="bg-blue-900/30 p-4 rounded-xl text-center mb-4 border border-blue-500/30">
+                <p class="text-xs text-blue-300 uppercase font-bold">Aspira in siringa:</p>
+                <p class="text-5xl font-black text-white">{{ units }} <span class="text-xl text-blue-400">UI</span></p>
+                <p class="text-[10px] mt-2 text-slate-400 italic">Calcolo basato su siringa standard U-100 (1ml)</p>
             </div>
 
-            <button @click="saveEntry" class="w-full bg-blue-600 hover:bg-blue-500 p-3 rounded-xl font-bold transition">
-                SALVA INIEZIONE
+            <button @click="saveEntry" class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-xl font-bold transition-all shadow-lg active:scale-95">
+                REGISTRA INIEZIONE
             </button>
         </div>
 
-        <h2 class="text-xl font-bold mb-4 px-2">Ultimi Log</h2>
-        <div v-for="log in logs" :key="log.id" class="bg-slate-800/50 p-4 rounded-xl mb-2 flex justify-between items-center border-l-4 border-blue-500">
+        <div class="bg-slate-800/50 p-5 rounded-2xl mb-8 border border-dashed border-slate-600">
+            <h3 class="text-sm font-bold text-slate-300 mb-4 flex items-center">
+                <span class="mr-2">➕</span> AGGIUNGI ALLA LIBRERIA
+            </h3>
+            <div class="space-y-3">
+                <input v-model="newComp.name" placeholder="Nome (es. Peg-MGF)" class="w-full bg-slate-800 p-2 rounded-lg border border-slate-700 text-sm">
+                <div class="grid grid-cols-2 gap-2">
+                    <input v-model="newComp.half_life" type="number" placeholder="Emivita (ore)" class="bg-slate-800 p-2 rounded-lg border border-slate-700 text-sm">
+                    <select v-model="newComp.category" class="bg-slate-800 p-2 rounded-lg border border-slate-700 text-sm text-slate-300">
+                        <option value="Peptide">Peptide</option>
+                        <option value="Steroide">Steroide</option>
+                        <option value="Altro">Altro</option>
+                    </select>
+                </div>
+                <button @click="addNewCompound" class="w-full bg-slate-700 hover:bg-slate-600 p-2 rounded-lg text-xs font-bold transition">
+                    SALVA SOSTANZA
+                </button>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-4 px-2">
+            <h2 class="text-xl font-bold">Ultimi Log</h2>
+            <span class="text-[10px] bg-slate-700 px-2 py-1 rounded-full uppercase text-slate-400">Cloud Sync Attivo</span>
+        </div>
+        
+        <div v-for="log in logs" :key="log.id" class="bg-slate-800/80 p-4 rounded-xl mb-3 flex justify-between items-center border-l-4 border-blue-500 shadow-sm">
             <div>
-                <p class="font-bold">{{ log.compound_name }}</p>
-                <p class="text-xs text-slate-400">{{ formatDate(log.timestamp) }}</p>
+                <p class="font-bold text-slate-100">{{ log.compound_name }}</p>
+                <p class="text-[10px] text-slate-500 uppercase font-medium">{{ formatDate(log.timestamp) }}</p>
             </div>
             <div class="text-right">
-                <p class="text-blue-400 font-mono">{{ log.mcg }} mcg</p>
+                <p class="text-blue-400 font-black text-lg">{{ log.mcg }}<span class="text-xs ml-1">mcg</span></p>
             </div>
         </div>
     </div>
@@ -59,7 +83,9 @@
         createApp({
             data() {
                 return {
-                    compounds: [], logs: [],
+                    compounds: [], 
+                    logs: [],
+                    newComp: { name: '', half_life: 24, category: 'Peptide' },
                     form: { compound: null, vial_mg: 5, water_ml: 2, target_mcg: 250 }
                 }
             },
@@ -75,12 +101,19 @@
                     const [cRes, lRes] = await Promise.all([fetch('/api/compounds'), fetch('/api/logs')]);
                     this.compounds = await cRes.json();
                     this.logs = await lRes.json();
-                    if(this.compounds.length) this.form.compound = this.compounds[0];
+                    if(this.compounds.length && !this.form.compound) this.form.compound = this.compounds[0];
+                },
+                async addNewCompound() {
+                    if(!this.newComp.name) return alert("Inserisci un nome");
+                    await fetch(`/api/compounds/add?name=${this.newComp.name}&half_life=${this.newComp.half_life}&category=${this.newComp.category}`, {method:'POST'});
+                    this.newComp.name = ''; // Reset form
+                    this.loadData();
+                    alert("Sostanza aggiunta alla libreria!");
                 },
                 async saveEntry() {
+                    if(!this.form.compound) return alert("Seleziona una sostanza");
                     await fetch(`/api/logs?name=${this.form.compound.name}&dose=${this.form.target_mcg}`, {method:'POST'});
                     this.loadData();
-                    alert("Registrato!");
                 },
                 formatDate(date) {
                     return new Date(date).toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
