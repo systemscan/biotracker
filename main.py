@@ -66,4 +66,11 @@ def save_log(name: str, dose: float, db: Session = Depends(get_db)):
 def get_logs(db: Session = Depends(get_db)):
     return db.query(InjectionLog).order_by(InjectionLog.timestamp.desc()).all()
 
+
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
+@app.post("/api/compounds/add")
+def add_compound(name: str, half_life: float, category: str, db: Session = Depends(get_db)):
+    new_comp = Compound(name=name, half_life_hours=half_life, category=category)
+    db.add(new_comp)
+    db.commit()
+    return {"status": "Sostanza salvata!"}
