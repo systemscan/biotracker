@@ -82,3 +82,13 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
+    @app.delete("/api/compounds/{compound_id}")
+def delete_compound(compound_id: int, db: Session = Depends(get_db)):
+    comp = db.query(Compound).filter(Compound.id == compound_id).first()
+    if not comp:
+        raise HTTPException(status_code=404, detail="Non trovato")
+    db.delete(comp)
+    db.commit()
+    return {"status": "eliminato"}
+
+
