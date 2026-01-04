@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioTracker</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans">
+    <div id="app" class="max-w-md mx-auto p-4">
+        <h1 class="text-3xl font-bold text-blue-500 mb-6 text-center">BioTracker Pro</h1>
+
+        <div class="bg-slate-800 p-6 rounded-2xl shadow-xl mb-6">
+            <label class="block mb-2 text-sm uppercase font-bold text-slate-400">Sostanza</label>
+            <select v-model="form.compound" class="w-full bg-slate-700 p-3 rounded-lg mb-4 text-white">
+                <option v-for="c in compounds" :key="c.id" :value="c">{{ c.name }}</option>
+            </select>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block mb-1 text-xs">MG nel Vial</label>
+                    <input type="number" v-model="form.vial_mg" class="w-full bg-slate-700 p-2 rounded">
+                </div>
+                <div>
+                    <label class="block mb-1 text-xs">ML Acqua</label>
+                    <input type="number" v-model="form.water_ml" class="w-full bg-slate-700 p-2 rounded">
+                </div>
+            </div>
+
+            <label class="block mb-1 text-xs text-center">Dose desiderata (MCG)</label>
+            <input type="number" v-model="form.target_mcg" class="w-full bg-slate-700 p-3 rounded mb-4 text-center text-xl font-bold">
+
+            <div v-if="units !== null" class="bg-blue-900/40 p-4 rounded-xl text-center mb-4">
+                <p class="text-sm text-blue-300">Aspira in siringa:</p>
+                <p class="text-4xl font-black">{{ units }} <span class="text-lg">Unità</span></p>
+                <p class="text-[10px] mt-1 text-slate-400 italic">Basato su siringa U-100</p>
+            </div>
+
+            <button @click="saveEntry" class="w-full bg-blue-600 hover:bg-blue-500 p-3 rounded-xl font-bold transition">
+                SALVA INIEZIONE
+            </button>
+        </div>
+
+        <h2 class="text-xl font-bold mb-4 px-2">Ultimi Log</h2>
+        <div v-for="log in logs" :key="log.id" class="bg-slate-800/50 p-4 rounded-xl mb-2 flex justify-between items-center border-l-4 border-blue-500">
+            <div>
+                <p class="font-bold">{{ log.compound_name }}</p>
+                <p class="text-xs text-slate-400">{{ formatDate(log.timestamp) }}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-blue-400 font-mono">{{ log.mcg }} mcg</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+        createApp({
+            data() {
+                return {
+                    compounds: [], logs: [],
+                    form: { compound: null, vial_mg: 5, water_ml: 2, target_mcg: 250 }
+                }
+            },
+            computed: {
+                units() {
+                    if (!this.form.vial_mg || !this.form.water_ml || !this.form.target_mcg) return null;
+                    const mcg_per_ml = (this.form.vial_mg * 1000) / this.form.water_ml;
+                    return ((this.form.target_mcg / mcg_per_ml) * 100).toFixed(1);
+                }
+            },
+            methods: {
+                async loadData() {
+                    const [cRes, lRes] = await Promise.all([fetch('/api/compounds'), fetch('/api/logs')]);
+                    this.compounds = await cRes.json();
+                    this.logs = await lRes.json();
+                    if(this.compounds.length) this.form.compound = this.compounds[0];
+                },
+                async saveEntry() {
+                    await fetch(`/api/logs?name=${this.form.compound.name}&dose=${this.form.target_mcg}`, {method:'POST'});
+                    this.loadData();
+                    alert("Registrato!");
+                },
+                formatDate(date) {
+                    return new Date(date).toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+                }
+            },
+            mounted() { this.loadData(); }
+        }).mount('#app')
+    </script>
+</body>
+</html>
