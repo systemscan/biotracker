@@ -3,74 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BioTracker Pro v2</title>
+    <title>BioTracker Pro - Blood Levels</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans">
     <div id="app" class="max-w-md mx-auto p-4">
-        <h1 class="text-3xl font-bold text-blue-500 mb-6 text-center">BioTracker Pro</h1>
+        <h1 class="text-2xl font-black text-blue-500 mb-6 text-center tracking-tighter italic">BIOTRACKER PRO</h1>
 
         <div class="bg-slate-800 p-4 rounded-2xl shadow-xl mb-6 border border-slate-700">
-            <h3 class="text-xs font-bold text-slate-400 uppercase mb-2 text-center">Livello Ematico Stimato (7gg)</h3>
-            <canvas id="bloodLevelChart" height="150"></canvas>
+            <p class="text-[10px] text-slate-500 uppercase font-bold mb-2 text-center">Andamento Ematico Stimato (48h)</p>
+            <canvas id="bloodLevelChart" height="160"></canvas>
         </div>
 
         <div class="bg-slate-800 p-6 rounded-2xl shadow-xl mb-6 border border-slate-700">
-            <label class="block mb-1 text-xs uppercase font-black text-slate-400">Sostanza</label>
-            <select v-model="form.compound" class="w-full bg-slate-700 p-3 rounded-lg mb-2 text-white outline-none border border-slate-600">
+            <label class="block mb-1 text-[10px] uppercase font-black text-slate-400 text-center">Seleziona Compost</label>
+            <select v-model="form.compound" class="w-full bg-slate-700 p-3 rounded-lg mb-1 text-white text-center outline-none border border-slate-600 focus:border-blue-500">
                 <option v-for="c in compounds" :key="c.id" :value="c">{{ c.name }}</option>
             </select>
-            
-            <p v-if="form.compound" class="text-[10px] text-blue-400 mb-4 px-1 uppercase italic">
-                Emivita impostata: {{ form.compound.half_life_hours }} ore
+            <p v-if="form.compound" class="text-[9px] text-blue-400 mb-4 text-center uppercase tracking-widest">
+                Half-Life: {{ form.compound.half_life_hours }} ore
             </p>
 
             <div class="flex gap-2 mb-4 bg-slate-900 p-1 rounded-lg">
-                <button @click="form.isLiquid = false" :class="!form.isLiquid ? 'bg-blue-600' : ''" class="flex-1 py-1 text-[10px] rounded uppercase font-bold">Polvere</button>
-                <button @click="form.isLiquid = true" :class="form.isLiquid ? 'bg-blue-600' : ''" class="flex-1 py-1 text-[10px] rounded uppercase font-bold">Liquido Pronto</button>
+                <button @click="form.isLiquid = false" :class="!form.isLiquid ? 'bg-blue-600' : 'text-slate-500'" class="flex-1 py-1 text-[10px] rounded uppercase font-bold transition">Polvere</button>
+                <button @click="form.isLiquid = true" :class="form.isLiquid ? 'bg-blue-600' : 'text-slate-500'" class="flex-1 py-1 text-[10px] rounded uppercase font-bold transition">Liquido</button>
             </div>
 
             <div v-if="!form.isLiquid" class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block mb-1 text-[10px] font-bold text-slate-500 uppercase">Totale nel Vial</label>
-                    <div class="flex bg-slate-700 rounded-lg overflow-hidden">
-                        <input type="number" v-model="form.vial_total" class="w-full bg-transparent p-2 outline-none">
-                        <select v-model="form.unitType" class="bg-slate-600 text-[10px] px-1 uppercase">
+                <div class="bg-slate-900/50 p-2 rounded-lg border border-slate-700">
+                    <label class="block mb-1 text-[9px] font-bold text-slate-500 uppercase">Nel Vial</label>
+                    <div class="flex">
+                        <input type="number" v-model="form.vial_total" class="w-full bg-transparent p-1 outline-none text-sm font-bold">
+                        <select v-model="form.unitType" class="bg-slate-700 text-[9px] px-1 rounded uppercase">
                             <option value="mg">mg</option>
                             <option value="ui">ui</option>
                         </select>
                     </div>
                 </div>
-                <div>
-                    <label class="block mb-1 text-[10px] font-bold text-slate-500 uppercase">ML Acqua (BAC)</label>
-                    <input type="number" v-model="form.water_ml" class="w-full bg-slate-700 p-2 rounded-lg border border-slate-600">
+                <div class="bg-slate-900/50 p-2 rounded-lg border border-slate-700">
+                    <label class="block mb-1 text-[9px] font-bold text-slate-500 uppercase">ML Acqua</label>
+                    <input type="number" v-model="form.water_ml" class="w-full bg-transparent p-1 outline-none text-sm font-bold">
                 </div>
             </div>
 
-            <div v-else class="mb-4">
-                <label class="block mb-1 text-[10px] font-bold text-slate-500 uppercase text-center">Concentrazione (mg/ml)</label>
-                <input type="number" v-model="form.concentration" class="w-full bg-slate-700 p-2 rounded-lg text-center font-bold">
+            <div v-else class="mb-4 bg-slate-900/50 p-2 rounded-lg border border-slate-700">
+                <label class="block mb-1 text-[9px] font-bold text-slate-500 uppercase text-center">Concentrazione (mg/ml)</label>
+                <input type="number" v-model="form.concentration" class="w-full bg-transparent p-1 outline-none text-center font-bold text-lg">
             </div>
 
-            <label class="block mb-1 text-[10px] font-bold text-slate-500 text-center uppercase">Dose Desiderata (mcg/mg)</label>
-            <input type="number" v-model="form.target_dose" class="w-full bg-slate-700 p-3 rounded-xl mb-4 text-center text-2xl font-black text-blue-400 border border-slate-600">
-
-            <div v-if="calcResult" class="bg-blue-900/30 p-4 rounded-xl text-center mb-4 border border-blue-500/30">
-                <p class="text-[10px] text-blue-300 uppercase font-bold mb-1">Dosaggio da aspirare:</p>
-                <p class="text-4xl font-black text-white leading-tight">{{ calcResult.ui }} <span class="text-lg">UI</span></p>
-                <p class="text-md font-bold text-blue-400">({{ calcResult.ml }} ml)</p>
+            <div class="text-center mb-4">
+                <label class="block mb-1 text-[10px] font-bold text-slate-500 uppercase">Dose Desiderata (mcg)</label>
+                <input type="number" v-model="form.target_dose" class="w-full bg-slate-900 p-4 rounded-2xl text-center text-4xl font-black text-blue-400 border border-slate-700">
             </div>
 
-            <button @click="saveEntry" class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-xl font-bold transition shadow-lg">REGISTRA INIEZIONE</button>
+            <div v-if="calcResult" class="bg-blue-600/10 p-4 rounded-2xl text-center mb-6 border border-blue-500/40">
+                <p class="text-[10px] text-blue-300 uppercase font-black mb-1">Dosaggio Siringa</p>
+                <div class="flex justify-center items-baseline gap-2">
+                    <span class="text-5xl font-black">{{ calcResult.ui }}</span>
+                    <span class="text-xl font-bold text-blue-400">UI</span>
+                </div>
+                <p class="text-sm font-bold text-slate-400 mt-1">{{ calcResult.ml }} ml</p>
+            </div>
+
+            <button @click="saveEntry" class="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-2xl font-black uppercase tracking-widest transition shadow-lg active:scale-95">
+                Salva Somministrazione
+            </button>
         </div>
 
-        <h2 class="text-sm font-bold mb-3 uppercase text-slate-400 px-2">Registro</h2>
-        <div v-for="log in logs" :key="log.id" class="bg-slate-800/50 p-3 rounded-lg mb-2 flex justify-between items-center text-xs">
-            <span>{{ log.compound_name }}</span>
-            <span class="font-bold text-blue-400">{{ log.mcg }} mcg</span>
-            <span class="text-slate-500">{{ formatDate(log.timestamp) }}</span>
+        <div class="bg-slate-800/40 p-4 rounded-2xl mb-8 border border-dashed border-slate-700">
+            <details>
+                <summary class="text-[10px] font-black text-slate-500 uppercase cursor-pointer text-center">Gestisci Libreria Composti</summary>
+                <div class="mt-4 space-y-2">
+                    <input v-model="newComp.name" placeholder="Nome" class="w-full bg-slate-800 p-2 rounded-lg border border-slate-700 text-sm">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input v-model="newComp.half_life" type="number" placeholder="Emivita (ore)" class="bg-slate-800 p-2 rounded-lg border border-slate-700 text-sm">
+                        <select v-model="newComp.category" class="bg-slate-800 p-2 rounded-lg border border-slate-700 text-sm">
+                            <option value="Peptide">Peptide</option>
+                            <option value="Steroide">Steroide</option>
+                        </select>
+                    </div>
+                    <button @click="addNewCompound" class="w-full bg-slate-700 p-2 rounded-lg text-[10px] font-bold uppercase">Aggiungi</button>
+                </div>
+            </details>
+        </div>
+
+        <h2 class="text-[10px] font-black mb-4 uppercase text-slate-500 px-2 tracking-widest">Storico Recente</h2>
+        <div v-for="log in logs.slice(0,10)" :key="log.id" class="bg-slate-800/60 p-4 rounded-xl mb-2 flex justify-between items-center border-r-4 border-blue-500">
+            <div>
+                <p class="font-bold text-sm">{{ log.compound_name }}</p>
+                <p class="text-[10px] text-slate-500">{{ formatDate(log.timestamp) }}</p>
+            </div>
+            <p class="text-blue-400 font-black text-sm">{{ log.mcg }} mcg</p>
         </div>
     </div>
 
@@ -80,22 +105,21 @@
             data() {
                 return {
                     compounds: [], logs: [], chart: null,
-                    form: { compound: null, isLiquid: false, vial_total: 5, water_ml: 2, target_dose: 250, unitType: 'mg', concentration: 250 }
+                    newComp: { name: '', half_life: 24, category: 'Peptide' },
+                    form: { compound: null, isLiquid: false, vial_total: 5, unitType: 'mg', water_ml: 2, target_dose: 250, concentration: 250 }
                 }
             },
             computed: {
                 calcResult() {
                     let ui = 0;
                     if (this.form.isLiquid) {
-                        // Se liquido: (Dose / Concentrazione) * 100
                         ui = (this.form.target_dose / this.form.concentration) * 100;
                     } else {
-                        // Se polvere: (Dose / (Totale/ML)) * 100
                         const total_mcg = this.form.unitType === 'mg' ? this.form.vial_total * 1000 : this.form.vial_total;
                         const mcg_per_ml = total_mcg / this.form.water_ml;
                         ui = (this.form.target_dose / mcg_per_ml) * 100;
                     }
-                    if (isNaN(ui) || !isFinite(ui)) return null;
+                    if (!ui || isNaN(ui) || !isFinite(ui)) return null;
                     return { ui: ui.toFixed(1), ml: (ui / 100).toFixed(2) };
                 }
             },
@@ -107,35 +131,70 @@
                     if(this.compounds.length && !this.form.compound) this.form.compound = this.compounds[0];
                     this.renderChart();
                 },
+                async addNewCompound() {
+                    if(!this.newComp.name) return;
+                    await fetch(`/api/compounds/add?name=${this.newComp.name}&half_life=${this.newComp.half_life}&category=${this.newComp.category}`, {method:'POST'});
+                    this.newComp.name = '';
+                    this.loadData();
+                },
                 async saveEntry() {
+                    if(!this.form.compound) return;
                     await fetch(`/api/logs?name=${this.form.compound.name}&dose=${this.form.target_dose}`, {method:'POST'});
                     this.loadData();
                 },
                 formatDate(date) {
-                    return new Date(date).toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit'});
+                    return new Date(date).toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
                 },
                 renderChart() {
                     const ctx = document.getElementById('bloodLevelChart').getContext('2d');
                     if(this.chart) this.chart.destroy();
-                    
-                    // Logica semplificata per il grafico (ultimi 7 giorni)
-                    const labels = Array.from({length: 7}, (_, i) => i + "gg fa").reverse();
-                    const dataPoints = labels.map(() => Math.random() * 100); // Qui andrebbe la formula matematica
+
+                    const hoursToView = 48; // Vediamo le ultime 48 ore
+                    const now = new Date();
+                    const dataPoints = [];
+                    const labels = [];
+
+                    for (let i = hoursToView; i >= 0; i--) {
+                        const timeAtStep = new Date(now.getTime() - (i * 3600000));
+                        let totalAtHour = 0;
+
+                        this.logs.forEach(log => {
+                            const logTime = new Date(log.timestamp);
+                            const hoursPassed = (timeAtStep - logTime) / 3600000;
+                            
+                            if (hoursPassed >= 0) {
+                                const compound = this.compounds.find(c => c.name === log.compound_name);
+                                const hl = compound ? compound.half_life_hours : 24;
+                                // Formula Decadimento: Dose * 0.5 ^ (ore_passate / emivita)
+                                totalAtHour += log.mcg * Math.pow(0.5, hoursPassed / hl);
+                            }
+                        });
+
+                        dataPoints.push(totalAtHour);
+                        labels.push(i === 0 ? "Ora" : -i + "h");
+                    }
 
                     this.chart = new Chart(ctx, {
                         type: 'line',
                         data: {
                             labels: labels,
                             datasets: [{
-                                label: 'Livello Stimato',
                                 data: dataPoints,
                                 borderColor: '#3b82f6',
+                                borderWidth: 3,
                                 tension: 0.4,
                                 fill: true,
-                                backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                pointRadius: 0
                             }]
                         },
-                        options: { plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
+                        options: {
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, ticks: { color: '#475569', font: { size: 8 } }, grid: { color: '#1e293b' } },
+                                x: { ticks: { color: '#475569', font: { size: 8 }, maxRotation: 0 }, grid: { display: false } }
+                            }
+                        }
                     });
                 }
             },
