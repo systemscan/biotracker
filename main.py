@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 
-# Se sei su Railway con PostgreSQL, usa la variabile d'ambiente, altrimenti usa SQLite
+# Configurazione Database
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./biotracker.db")
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
@@ -50,10 +50,9 @@ def get_compounds(db: Session = Depends(get_db)):
 
 @app.post("/api/compounds/add")
 def add_compound(name: str, half_life: float, threshold: float = 0, db: Session = Depends(get_db)):
-    if db.query(Compound).filter(Compound.name == name).first():
-        return {"status": "exists"}
-    db.add(Compound(name=name, half_life_hours=half_life, category="P", min_threshold=threshold))
-    db.commit()
+    if not db.query(Compound).filter(Compound.name == name).first():
+        db.add(Compound(name=name, half_life_hours=half_life, category="P", min_threshold=threshold))
+        db.commit()
     return {"status": "ok"}
 
 @app.delete("/api/compounds/{id}")
@@ -79,3 +78,8 @@ def delete_log(id: int, db: Session = Depends(get_db)):
     return {"status": "ok"}
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)
