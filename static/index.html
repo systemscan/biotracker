@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BioTracker Pro v5.8</title>
+    <title>BioTracker Pro v5.9</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,13 +14,12 @@
         .mark { position: absolute; height: 100%; border-left: 1px solid rgba(255,255,255,0.1); top: 0; font-size: 7px; color: #64748b; padding-top: 25px; text-align: center; width: 20px; margin-left: -10px; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans text-white">
+<body class="bg-slate-900 text-slate-100 font-sans">
     <div id="app">
         <div v-if="!isAuthenticated" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6 text-center">
             <div class="w-full max-w-xs">
                 <h1 class="text-5xl font-black text-blue-500 mb-2 italic tracking-tighter uppercase font-serif">BioTracker</h1>
-                <p class="text-[10px] text-slate-500 uppercase tracking-[0.3em] mb-10 font-black">Professional Monitor</p>
-                <input type="password" v-model="passInput" placeholder="PIN" @keyup.enter="checkPassword" class="w-full bg-slate-800 p-5 rounded-3xl border-2 border-slate-700 text-center text-3xl mb-4 text-white outline-none focus:border-blue-500 shadow-inner">
+                <input type="password" v-model="passInput" placeholder="PIN" @keyup.enter="checkPassword" class="w-full bg-slate-800 p-5 rounded-3xl border-2 border-slate-700 text-center text-3xl mb-4 text-white outline-none">
                 <button @click="checkPassword" class="w-full bg-blue-600 p-5 rounded-3xl font-black uppercase text-white shadow-xl active:scale-95 transition-all">Sblocca Accesso</button>
             </div>
         </div>
@@ -46,25 +45,24 @@
             </div>
 
             <div class="bg-slate-800 p-6 rounded-[2.5rem] shadow-2xl mb-6 border border-slate-700 relative">
-                <select v-model="selectedCompoundName" @change="loadCompoundSettings" class="w-full bg-slate-900 p-5 rounded-3xl mb-2 border border-slate-700 font-black text-center text-white outline-none appearance-none shadow-inner">
+                <select v-model="selectedCompoundName" @change="loadCompoundSettings" class="w-full bg-slate-900 p-5 rounded-3xl mb-2 border border-slate-700 font-black text-center text-white outline-none shadow-inner">
                     <option v-for="c in compounds" :key="c.id" :value="c.name">{{ c.name }}</option>
                 </select>
-                
-                <p v-if="form.compound" class="text-[10px] text-blue-400 text-center uppercase font-black mb-6 tracking-widest">
+                <p v-if="form.compound" class="text-[10px] text-blue-400 text-center uppercase font-black mb-6 italic tracking-widest">
                     HL: {{ form.compound.half_life_hours }}h | Soglia: {{ form.compound.min_threshold }} mcg
                 </p>
 
-                <div class="flex gap-2 mb-6 bg-slate-900 p-1.5 rounded-2xl border border-slate-700">
-                    <button @click="form.isLiquid = false" :class="!form.isLiquid ? 'bg-blue-600 shadow-lg' : 'text-slate-500'" class="flex-1 py-2.5 text-[10px] rounded-xl font-black uppercase transition-all">Polvere</button>
-                    <button @click="form.isLiquid = true" :class="form.isLiquid ? 'bg-blue-600 shadow-lg' : 'text-slate-500'" class="flex-1 py-2.5 text-[10px] rounded-xl font-black uppercase transition-all">Liquido</button>
+                <div class="flex gap-2 mb-6 bg-slate-900 p-1.5 rounded-2xl">
+                    <button @click="form.isLiquid = false" :class="!form.isLiquid ? 'bg-blue-600 shadow-lg' : 'text-slate-500'" class="flex-1 py-2.5 text-[10px] rounded-xl font-black uppercase">Polvere</button>
+                    <button @click="form.isLiquid = true" :class="form.isLiquid ? 'bg-blue-600 shadow-lg' : 'text-slate-500'" class="flex-1 py-2.5 text-[10px] rounded-xl font-black uppercase">Liquido</button>
                 </div>
 
                 <div v-if="!form.isLiquid" class="grid grid-cols-2 gap-4 mb-6">
                     <div class="bg-slate-900 p-3 rounded-2xl border border-slate-700 text-center shadow-inner">
-                        <label class="block text-[9px] font-black text-slate-500 uppercase mb-2 italic">Vial Totale</label>
+                        <label class="block text-[9px] font-black text-slate-500 uppercase mb-2">Vial Totale</label>
                         <div class="flex items-center justify-center">
                             <input type="number" v-model="form.vial_total" class="bg-transparent w-16 text-center font-black text-white text-xl outline-none">
-                            <select v-model="form.unitType" class="bg-slate-800 text-[10px] rounded-lg px-2 py-1 uppercase text-blue-400 font-bold border border-slate-700 outline-none">
+                            <select v-model="form.unitType" class="bg-slate-800 text-[10px] rounded px-1 uppercase text-blue-400 font-bold border-none outline-none">
                                 <option value="mcg">mcg</option>
                                 <option value="mg">mg</option>
                                 <option value="ui">ui</option>
@@ -72,14 +70,14 @@
                         </div>
                     </div>
                     <div class="bg-slate-900 p-3 rounded-2xl border border-slate-700 text-center shadow-inner">
-                        <label class="block text-[9px] font-black text-slate-500 uppercase mb-2 italic">ML Acqua</label>
+                        <label class="block text-[9px] font-black text-slate-500 uppercase mb-2">ML Acqua</label>
                         <input type="number" v-model="form.water_ml" class="bg-transparent w-full text-center font-black text-white text-xl outline-none">
                     </div>
                 </div>
 
-                <div v-else class="mb-6 bg-slate-900 p-4 rounded-3xl border border-slate-700 text-center shadow-inner">
-                    <label class="block text-[9px] font-black text-slate-500 uppercase mb-2 italic">Concentrazione (per 1 ML)</label>
-                    <div class="flex items-center justify-center gap-3">
+                <div v-else class="mb-6 bg-slate-900 p-4 rounded-3xl border border-slate-700 text-center shadow-inner text-white">
+                    <label class="block text-[9px] font-black text-slate-500 uppercase mb-2">Concentrazione (per 1 ML)</label>
+                    <div class="flex items-center justify-center gap-3 text-white">
                         <input type="number" v-model="form.concentration" class="bg-transparent w-24 text-center font-black text-2xl outline-none text-white">
                         <select v-model="form.liqUnit" class="bg-slate-800 text-[10px] rounded-xl px-3 py-2 uppercase text-blue-400 font-bold border border-slate-700 outline-none">
                             <option value="mcg">mcg</option>
@@ -92,7 +90,7 @@
                 <div class="mb-6">
                     <div class="relative bg-slate-900 rounded-[2rem] border-2 border-blue-500/30 shadow-inner">
                         <input type="number" v-model="form.target_dose" class="w-full bg-transparent p-7 pr-24 text-center text-6xl font-black text-blue-500 outline-none tracking-tighter">
-                        <select v-model="form.targetUnit" class="absolute right-5 top-1/2 -translate-y-1/2 bg-slate-800 text-blue-400 font-black p-3 rounded-2xl text-[10px] uppercase border border-blue-500/40 outline-none">
+                        <select v-model="form.targetUnit" class="absolute right-5 top-1/2 -translate-y-1/2 bg-slate-800 text-blue-400 font-black p-3 rounded-2xl text-[10px] uppercase border border-blue-500/40">
                             <option value="mcg">mcg</option>
                             <option value="mg">mg</option>
                             <option value="ui">ui</option>
@@ -101,51 +99,56 @@
                 </div>
 
                 <div class="mb-8 bg-slate-900/40 p-5 rounded-[2rem] border border-slate-700/50 shadow-inner">
-                    <div class="flex justify-between items-center mb-5 font-black">
-                        <span class="text-[9px] text-slate-500 uppercase tracking-widest italic">Tipo Siringa:</span>
+                    <div class="flex justify-between items-center mb-5 text-white">
+                        <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest italic text-white">Siringa:</span>
                         <div class="flex gap-2">
-                            <button v-for="s in [0.3, 0.5, 1.0]" :key="s" @click="form.syringeSize = s" :class="form.syringeSize == s ? 'bg-blue-600 text-white shadow-lg border-blue-400' : 'bg-slate-800 text-slate-500 border-slate-700'" class="px-4 py-1.5 rounded-xl text-[10px] font-black border transition-all">
+                            <button v-for="s in [0.3, 0.5, 1.0]" :key="s" @click="form.syringeSize = s" :class="form.syringeSize == s ? 'bg-blue-600 text-white shadow-lg border-blue-400' : 'bg-slate-800 text-slate-500 border-slate-700'" class="px-4 py-1.5 rounded-xl text-[10px] font-black border transition-all text-white">
                                 {{ s }}ml
                             </button>
                         </div>
                     </div>
-                    
                     <div v-if="calcResult" class="syringe-body">
                         <div class="syringe-level" :class="{'syringe-over': parseFloat(calcResult.ml) > form.syringeSize}" :style="{ width: Math.min((parseFloat(calcResult.ml) / form.syringeSize) * 100, 100) + '%' }"></div>
                         <div v-for="mark in 5" :key="mark" class="mark" :style="{ left: (mark * 20) + '%' }">{{ (form.syringeSize * mark / 5).toFixed(1) }}</div>
                     </div>
-                    
-                    <div v-if="calcResult" class="flex justify-between mt-5 px-1">
-                        <div class="text-left"><span class="block text-[8px] font-black uppercase text-slate-500 mb-1">Unità Aspirate</span><span class="text-3xl font-black text-white leading-none">{{ calcResult.ui }} <small class="text-xs text-blue-400">UI</small></span></div>
-                        <div class="text-right"><span class="block text-[8px] font-black uppercase text-slate-500 mb-1">Volume ML</span><span class="text-3xl font-black text-blue-500 leading-none">{{ calcResult.ml }} <small class="text-xs">ML</small></span></div>
+                    <div v-if="calcResult" class="flex justify-between mt-5 px-1 text-white">
+                        <div class="text-left text-white font-black"><span class="block text-[8px] font-black uppercase text-slate-500 mb-1">Unità Aspirate</span><span class="text-3xl font-black text-white leading-none">{{ calcResult.ui }} <small class="text-xs text-blue-400">UI</small></span></div>
+                        <div class="text-right text-white font-black"><span class="block text-[8px] font-black uppercase text-slate-500 mb-1">Volume ML</span><span class="text-3xl font-black text-blue-500 leading-none">{{ calcResult.ml }} <small class="text-xs">ML</small></span></div>
                     </div>
                 </div>
 
-                <button @click="saveEntry" class="w-full bg-blue-600 hover:bg-blue-500 p-6 rounded-3xl font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 text-white text-sm">
+                <button @click="saveEntry" class="w-full bg-blue-600 hover:bg-blue-500 p-6 rounded-3xl font-black uppercase tracking-widest shadow-xl active:scale-95 text-white text-sm">
                     Salva Somministrazione
                 </button>
             </div>
 
             <div class="bg-slate-800 p-6 rounded-[2rem] mb-6 border border-slate-700 shadow-xl">
                 <details><summary class="text-[10px] font-black text-slate-400 uppercase cursor-pointer text-center list-none tracking-[0.3em] italic">+ Gestione Libreria</summary>
-                <div class="mt-6 space-y-4">
+                <div class="mt-6 space-y-4 text-white">
                     <div v-for="c in compounds" :key="c.id" class="flex justify-between items-center bg-slate-900 p-4 rounded-2xl border border-slate-700">
-                        <span class="text-xs font-black text-blue-400 uppercase tracking-tighter">{{ c.name }} <small class="text-slate-500 ml-2">({{ c.half_life_hours }}h)</small></span>
+                        <span class="text-xs font-black text-blue-400 uppercase">{{ c.name }} <small class="text-slate-500 ml-2 font-normal">({{ c.half_life_hours }}h)</small></span>
                         <button @click="deleteCompound(c.id)" class="text-red-500 text-[9px] font-black border border-red-500/20 px-3 py-1 rounded-xl">ELIMINA</button>
                     </div>
                     <div class="pt-6 border-t border-slate-700 space-y-3">
                         <input v-model="newComp.name" placeholder="Nome" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 text-sm font-bold text-white outline-none">
                         <div class="grid grid-cols-2 gap-3">
-                            <input v-model="newComp.half_life" type="number" placeholder="Emivita (h)" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 text-sm font-bold text-white outline-none">
-                            <input v-model="newComp.threshold" type="number" placeholder="Soglia (mcg)" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 text-sm font-bold text-white outline-none">
+                            <input v-model="newComp.half_life" type="number" placeholder="HL (h)" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 text-sm font-bold text-white outline-none">
+                            <div class="flex bg-slate-900 rounded-2xl border border-slate-700 overflow-hidden">
+                                <input v-model="newComp.threshold" type="number" placeholder="Soglia" class="w-full bg-transparent p-4 text-sm font-bold outline-none text-white">
+                                <select v-model="newComp.thUnit" class="bg-slate-800 text-[10px] px-2 uppercase text-blue-400 font-bold border-l border-slate-700 outline-none">
+                                    <option value="mcg">mcg</option>
+                                    <option value="mg">mg</option>
+                                    <option value="ui">ui</option>
+                                </select>
+                            </div>
                         </div>
-                        <button @click="addNewCompound" class="w-full bg-slate-100 text-slate-900 p-4 rounded-2xl font-black uppercase tracking-widest text-[10px]">Aggiungi Composto</button>
+                        <button @click="addNewCompound" class="w-full bg-slate-100 text-slate-900 p-4 rounded-2xl font-black uppercase text-[10px]">Aggiungi Composto</button>
                     </div>
                 </div></details>
             </div>
 
-            <div v-for="log in logs.slice(0,5)" :key="log.id" class="bg-slate-800 p-5 rounded-3xl mb-3 flex justify-between items-center border border-slate-700 text-white shadow-lg">
-                <div><div class="font-black text-sm uppercase tracking-tighter">{{ log.compound_name }}</div><div class="text-[9px] text-slate-500 uppercase font-black tracking-widest">{{ formatDate(log.timestamp) }}</div></div>
+            <div v-for="log in logs.slice(0,5)" :key="log.id" class="bg-slate-800 p-5 rounded-3xl mb-3 flex justify-between items-center border border-slate-700 shadow-lg text-white">
+                <div><div class="font-black text-sm uppercase text-white">{{ log.compound_name }}</div><div class="text-[9px] text-slate-500 uppercase font-black tracking-widest">{{ formatDate(log.timestamp) }}</div></div>
                 <div class="flex items-center gap-5">
                     <div class="text-blue-500 font-black text-2xl tracking-tighter">{{ log.mcg }}<span class="text-[10px] ml-1 uppercase text-slate-500">mcg</span></div>
                     <button @click="deleteLog(log.id)" class="text-red-500/30 text-xs font-black">✕</button>
@@ -160,9 +163,9 @@
             data() {
                 return {
                     isAuthenticated: false, passInput: '', compounds: [], logs: [], chart: null, selectedCompoundName: '',
-                    newComp: { name: '', half_life: 24, threshold: 0 },
+                    newComp: { name: '', half_life: 24, threshold: 0, thUnit: 'mcg' },
                     form: { compound: null, isLiquid: false, vial_total: 5, unitType: 'mg', water_ml: 2, target_dose: 250, targetUnit: 'mcg', concentration: 250, liqUnit: 'mg', syringeSize: 1.0 },
-                    stats: { peak: 0, trough: 0, nextDoseTime: 'N/A' },
+                    stats: { peak: 0, trough: 0, nextDoseTime: 'MAI' },
                     chartColors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6']
                 }
             },
@@ -219,8 +222,10 @@
                 },
                 async addNewCompound() {
                     if(!this.newComp.name) return;
-                    await fetch(`/api/compounds/add?name=${encodeURIComponent(this.newComp.name)}&half_life=${this.newComp.half_life}&threshold=${this.newComp.threshold}`, { method: 'POST' });
-                    this.newComp = { name: '', half_life: 24, threshold: 0 };
+                    let th = parseFloat(this.newComp.threshold);
+                    if(this.newComp.thUnit === 'mg') th *= 1000;
+                    await fetch(`/api/compounds/add?name=${encodeURIComponent(this.newComp.name)}&half_life=${this.newComp.half_life}&threshold=${th}`, { method: 'POST' });
+                    this.newComp = { name: '', half_life: 24, threshold: 0, thUnit: 'mcg' };
                     await this.loadData();
                 },
                 async deleteCompound(id) { if(confirm("Eliminare?")) { await fetch(`/api/compounds/${id}`, { method: 'DELETE' }); await this.loadData(); } },
@@ -234,14 +239,14 @@
                     const labels = []; for(let i = -past; i <= future; i++) labels.push(i === 0 ? "Ora" : i + "h");
                     const uniqueNames = [...new Set(this.logs.map(l => l.compound_name))];
                     const datasets = [];
-                    
-                    let maxP48 = 0, minF24 = 0, targetReached = "MAI";
+                    let maxP = 0, minF = 0, doseTime = "MAI";
 
                     uniqueNames.forEach((name, idx) => {
                         const info = this.compounds.find(c => c.name === name);
                         const hl = info ? info.half_life_hours : 24;
                         const color = this.chartColors[idx % 5];
                         const points = [];
+                        const isFocused = name === this.selectedCompoundName;
                         const th = info && info.min_threshold > 0 ? info.min_threshold : 0;
 
                         for(let i = -past; i <= future; i++) {
@@ -252,33 +257,20 @@
                                 if(diff >= 0) val += log.mcg * Math.pow(0.5, diff / hl);
                             });
                             points.push(val);
-                            
-                            if(name === this.selectedCompoundName) {
-                                if(i <= 0 && val > maxP48) maxP48 = val;
-                                if(i === 24) minF24 = val;
-                                if(i > 0 && targetReached === "MAI" && th > 0 && val <= th) {
-                                    targetReached = tStep.toLocaleString('it-IT', {weekday:'short', hour:'2-digit', minute:'2-digit'});
-                                }
+                            if(isFocused) {
+                                if(i <= 0 && val > maxP) maxP = val;
+                                if(i === 24) minF = val;
+                                if(i > 0 && doseTime === "MAI" && th > 0 && val <= th) doseTime = tStep.toLocaleString('it-IT', {weekday:'short', hour:'2-digit'});
                             }
                         }
-                        datasets.push({ label: name, data: points.map((v, i) => i <= past ? v : null), borderColor: color, borderWidth: 3, pointRadius: 0, tension: 0.4, fill: false });
-                        datasets.push({ label: name + '...', data: points.map((v, i) => i >= past ? v : null), borderColor: color, borderDash: [5, 5], borderWidth: 2, pointRadius: 0, tension: 0.4, fill: false });
+                        datasets.push({ label: name, data: points.map((v, i) => i <= past ? v : null), borderColor: color, borderWidth: isFocused ? 4 : 1.5, pointRadius: 0, tension: 0.4 });
+                        datasets.push({ label: name + '...', data: points.map((v, i) => i >= past ? v : null), borderColor: color, borderDash: [5, 5], borderWidth: isFocused ? 3 : 1, pointRadius: 0, tension: 0.4 });
                     });
 
-                    this.stats.peak = maxP48;
-                    this.stats.trough = minF24;
-                    this.stats.nextDoseTime = targetReached;
-
+                    this.stats.peak = maxP; this.stats.trough = minF; this.stats.nextDoseTime = doseTime;
                     this.chart = new Chart(canvas.getContext('2d'), {
                         type: 'line', data: { labels, datasets },
-                        options: {
-                            responsive: true,
-                            plugins: { legend: { display: true, labels: { color: '#94a3b8', font: { size: 8 } } } },
-                            scales: {
-                                y: { beginAtZero: true, grid: { color: '#1e293b' }, ticks: { display: false } },
-                                x: { grid: { color: (c) => c.tick.label === "Ora" ? "#3b82f6" : "transparent" }, ticks: { color: '#475569', font: { size: 8 } } }
-                            }
-                        }
+                        options: { responsive: true, plugins: { legend: { display: true, labels: { color: '#94a3b8', font: { size: 8 } } } }, scales: { y: { beginAtZero: true, grid: { color: '#1e293b' }, ticks: { display: false } }, x: { grid: { color: (c) => c.tick.label === "Ora" ? "#3b82f6" : "transparent" }, ticks: { color: '#475569', font: { size: 8 } } } } }
                     });
                 }
             },
