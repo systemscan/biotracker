@@ -91,3 +91,13 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
+    @app.delete("/api/logs/{log_id}")
+def delete_log(log_id: int, db: Session = Depends(get_db)):
+    log = db.query(InjectionLog).filter(InjectionLog.id == log_id).first()
+    if not log:
+        raise HTTPException(status_code=404, detail="Log non trovato")
+    db.delete(log)
+    db.commit()
+    return {"status": "log eliminato"}
+
+
