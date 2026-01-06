@@ -217,16 +217,24 @@
                     await this.loadData();
                 },
                 async checkPassword() {
-                    if (!this.passInput) return;
-                    try {
-                        const res = await fetch(`/api/verify-password?password=${encodeURIComponent(this.passInput)}`);
-                        if (res.ok) {
-                            localStorage.setItem('biotracker_auth', 'true');
-                            this.isAuthenticated = true;
-                            await this.loadData();
-                        } else alert("PIN Errato!");
-                    } catch (e) { alert("Errore connessione."); }
-                },
+    if (!this.passInput) return;
+    try {
+        const res = await fetch(`/api/verify-password?password=${encodeURIComponent(this.passInput)}`);
+        if (res.ok) {
+            localStorage.setItem('biotracker_auth', 'true');
+            this.isAuthenticated = true;
+            // Usiamo un piccolo ritardo per assicurarci che l'HTML sia caricato prima di caricare i dati
+            setTimeout(async () => {
+                await this.loadData();
+            }, 100);
+        } else {
+            alert("PIN Errato!");
+            this.passInput = '';
+        }
+    } catch (e) { 
+        alert("Errore di connessione al server."); 
+    }
+},
                 async loadData() {
                     const [cRes, lRes] = await Promise.all([fetch('/api/compounds'), fetch('/api/logs')]);
                     this.compounds = await cRes.json();
@@ -367,6 +375,7 @@ datasets.push({
     </script>
 </body>
 </html>
+
 
 
 
