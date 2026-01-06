@@ -47,17 +47,21 @@ def get_db():
 # --- ROTTE API ---
 
 @app.get("/api/verify-password")
-def verify_password(password: str):
-    # Legge la password SOLO dalle variabili di Railway.
-    # Se su Railway non è impostata, l'accesso sarà sempre negato (sicurezza totale del codice).
-    stored_password = os.environ.get("APP_PASSWORD")
+def verify_password(password: str = Query(...)):
+    # Legge la variabile da Railway
+    stored_password = os.getenv("APP_PASSWORD")
     
-    # Verifichiamo che la password esista su Railway e che coincida con quella inserita
-    if stored_password and password.strip() == stored_password.strip():
+    # DEBUG: Questo apparirà nei log di Railway per aiutarti a capire
+    print(f"Tentativo di accesso. PIN inserito: {password} | PIN su Railway: {stored_password}")
+
+    if not stored_password:
+        # Se ti dimentichi di impostare la variabile su Railway, usa 'biotracker' come emergenza
+        stored_password = "biotracker"
+
+    if password.strip() == stored_password.strip():
         return {"status": "ok"}
     
-    # Se la password è sbagliata o la variabile su Railway è vuota, blocca l'accesso
-    raise HTTPException(status_code=401, detail="Accesso negato")
+    raise HTTPException(status_code=401, detail="PIN Errato")
 
 
 @app.get("/api/compounds")
@@ -119,4 +123,5 @@ if __name__ == "__main__":
     # Usa la porta definita dall'ambiente o la 8080 di default
     port = int(os.getenv("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
 
