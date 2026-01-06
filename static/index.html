@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BioTracker Pro v6.7</title>
+    <title>BioTracker Pro v6.9</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -23,7 +23,7 @@
             <div class="w-full max-w-xs">
                 <h1 class="text-5xl font-black text-blue-500 mb-2 italic tracking-tighter uppercase">BioTracker</h1>
                 <input type="password" v-model="passInput" placeholder="PIN" @keyup.enter="checkPassword" class="w-full bg-slate-800 p-5 rounded-3xl border-2 border-slate-700 text-center text-3xl mb-4 text-white outline-none">
-                <button @click="checkPassword" class="w-full bg-blue-600 p-5 rounded-3xl font-black uppercase text-white shadow-xl">Sblocca</button>
+                <button @click="checkPassword" class="w-full bg-blue-600 p-5 rounded-3xl font-black uppercase text-white shadow-xl active:scale-95 transition-all">Sblocca</button>
             </div>
         </div>
 
@@ -109,16 +109,16 @@
                     </div>
                     <div v-if="calcResult" class="syringe-body">
                         <div class="syringe-level" :class="{'syringe-over': parseFloat(calcResult.ml) > form.syringeSize}" :style="{ width: Math.min((parseFloat(calcResult.ml) / form.syringeSize) * 100, 100) + '%' }"></div>
-                        <div v-for="mark in 5" class="mark" :style="{ left: (mark * 20) + '%' }">{{ (form.syringeSize * mark / 5).toFixed(1) }}</div>
+                        <div v-for="mark in 5" :key="mark" class="mark" :style="{ left: (mark * 20) + '%' }">{{ (form.syringeSize * mark / 5).toFixed(1) }}</div>
                     </div>
                     <div v-if="calcResult" class="flex justify-between mt-5 px-1 font-black">
-                        <div class="text-left"><span class="block text-[8px] uppercase text-slate-500 mb-1">Unità Aspirate</span><span class="text-3xl text-white font-black">{{ calcResult.ui }} <small class="text-xs text-blue-400">UI</small></span></div>
-                        <div class="text-right"><span class="block text-[8px] uppercase text-slate-500 mb-1">Volume ML</span><span class="text-3xl text-blue-500 font-black">{{ calcResult.ml }} <small class="text-xs text-white">ML</small></span></div>
+                        <div class="text-left font-black"><span class="block text-[8px] uppercase text-slate-500 mb-1">Unità Aspirate</span><span class="text-3xl text-white leading-none font-black">{{ calcResult.ui }} <small class="text-xs text-blue-400">UI</small></span></div>
+                        <div class="text-right font-black"><span class="block text-[8px] uppercase text-slate-500 mb-1">Volume ML</span><span class="text-3xl text-blue-500 leading-none font-black">{{ calcResult.ml }} <small class="text-xs text-white">ML</small></span></div>
                     </div>
                 </div>
 
                 <div class="mb-6 bg-slate-900 p-4 rounded-3xl border border-slate-700 shadow-inner text-center">
-                    <label class="block text-[9px] font-black text-slate-500 mb-2 uppercase italic">Data e Ora</label>
+                    <label class="block text-[9px] font-black text-slate-500 mb-2 uppercase italic">Data e Ora Somministrazione</label>
                     <input type="datetime-local" v-model="form.customTimestamp" class="bg-transparent text-white font-black text-center outline-none">
                 </div>
 
@@ -217,23 +217,19 @@
                     await this.loadData();
                 },
                 async checkPassword() {
-    console.log("Tentativo di sblocco con PIN:", this.passInput); // Debug nel browser
-    if (!this.passInput) return;
-
-    try {
-        const res = await fetch(`/api/verify-password?password=${encodeURIComponent(this.passInput)}`);
-        
-        if (res.ok) {
-            localStorage.setItem('biotracker_auth', 'true');
-            this.isAuthenticated = true;
-            await this.loadData();
-        } else {
-            alert("PIN Errato! Controlla le maiuscole o la variabile su Railway.");
-        }
-    } catch (error) {
-        console.error("Errore di connessione:", error);
-        alert("Errore di connessione al server. Riprova tra un momento.");
-    }
+                    if (!this.passInput) return;
+                    try {
+                        const res = await fetch(`/api/verify-password?password=${encodeURIComponent(this.passInput)}`);
+                        if (res.ok) {
+                            localStorage.setItem('biotracker_auth', 'true');
+                            this.isAuthenticated = true;
+                            await this.loadData();
+                        } else {
+                            alert("PIN Errato! Controlla Railway.");
+                        }
+                    } catch (error) {
+                        alert("Errore server. Riprova.");
+                    }
                 },
                 async loadData() {
                     const [cRes, lRes] = await Promise.all([fetch('/api/compounds'), fetch('/api/logs')]);
@@ -243,22 +239,13 @@
                     this.renderChart();
                 },
                 async saveEntry() {
-                // Cerca la funzione saveEntry() nello script in fondo al file HTML e sostituiscila con questa:
-async saveEntry() {
-    if(!this.form.compound || !this.calcResult) return;
-    
-    // Prendiamo la data scelta nel selettore (customTimestamp)
-    const ts = this.form.customTimestamp; 
-    
-    // Inviamo la data al server tramite l'URL
-    await fetch(`/api/logs?name=${encodeURIComponent(this.form.compound.name)}&dose=${this.calcResult.dose_mcg}&timestamp=${encodeURIComponent(ts)}`, { 
-        method: 'POST' 
-    });
-    
-    localStorage.setItem('prefs_' + this.form.compound.name, JSON.stringify(this.form));
-    await this.loadData();
-    this.setCurrentTime(); // Solo dopo il salvataggio torna all'ora attuale
-},
+                    if(!this.form.compound || !this.calcResult) return;
+                    const ts = this.form.customTimestamp; 
+                    await fetch(`/api/logs?name=${encodeURIComponent(this.form.compound.name)}&dose=${this.calcResult.dose_mcg}&timestamp=${encodeURIComponent(ts)}`, { method: 'POST' });
+                    localStorage.setItem('prefs_' + this.form.compound.name, JSON.stringify(this.form));
+                    await this.loadData();
+                    this.setCurrentTime();
+                },
                 async deleteCompound(id) { if(confirm("Eliminare?")) { await fetch(`/api/compounds/${id}`, { method: 'DELETE' }); await this.loadData(); } },
                 async deleteLog(id) { if(confirm("Eliminare?")) { await fetch(`/api/logs/${id}`, { method: 'DELETE' }); await this.loadData(); } },
                 formatDate(d) { return new Date(d).toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}); },
@@ -321,5 +308,3 @@ async saveEntry() {
     </script>
 </body>
 </html>
-
-
