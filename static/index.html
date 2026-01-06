@@ -246,72 +246,122 @@
                 async deleteLog(id) { if(confirm("Eliminare?")) { await fetch(`/api/logs/${id}`, { method: 'DELETE' }); await this.loadData(); } },
                 formatDate(d) { return new Date(d).toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}); },
                 renderChart() {
-                    const canvas = document.getElementById('bloodLevelChart');
-                    if(!canvas) return;
-                    if(this.chart) this.chart.destroy();
-                    const past = 48, future = 168, now = new Date();
-                    const labels = Array.from({length: past + future + 1}, (_, i) => i - past);
-                    const uniqueNames = [...new Set(this.logs.map(l => l.compound_name))];
-                    const datasets = [];
-                    let maxP = 0, curD = 0, minF = 0, nD = "MAI";
+    const canvas = document.getElementById('bloodLevelChart');
+    if(!canvas || !this.selectedCompoundName) return;
+    if(this.chart) this.chart.destroy();
 
-                    uniqueNames.forEach((name, idx) => {
-                        const info = this.compounds.find(c => c.name === name);
-                        const hl = info ? info.half_life_hours : 24;
-                        const isFocused = name === this.selectedCompoundName;
-                        const color = this.chartColors[idx % 5];
-                        const points = [];
-                        let tempMax = 0;
+    const past = 48;    // 2 giorni di passato
+    const future = 168; // 7 giorni di futuro
+    const now = new Date();
+    
+    // Genera etichette da -48 a +168
+    const labels = Array.from({length: past + future + 1}, (_, i) => i - past);
+    const uniqueNames = [...new Set(this.logs.map(l => l.compound_name))];
+    const datasets = [];
+    
+    let maxP = 0, curD = 0, minF = 0, nD = "MAI";
+    let peakIdxGlobal = -1;
+    let troughIdxGlobal = -1;
 
-                        this.logs.filter(l => l.compound_name === name).forEach(log => {
-                            const v = log.mcg * Math.pow(0.5, (now - new Date(log.timestamp))/3600000 / hl);
-                            if(v > tempMax) tempMax = v;
-                        });
-                        const th = (info && info.min_threshold > 0) ? info.min_threshold : tempMax * 0.7;
+    uniqueNames.forEach((name, idx) => {
+        const info = this.compounds.find(c => c.name === name);
+        const hl = info ? info.half_life_hours : 24;
+        const isFocused = name === this.selectedCompoundName;
+        const color = this.chartColors[idx % 5];
+        const points = [];
+        let tempMaxP = 0;
+        let peakIdx = -1;
 
-                        for(let i = -past; i <= future; i++) {
-                            const t = new Date(now.getTime() + (i * 3600000));
-                            let val = 0;
-                            this.logs.filter(l => l.compound_name === name).forEach(log => {
-                                const d = (t - new Date(log.timestamp)) / 3600000;
-                                if(d >= 0) val += log.mcg * Math.pow(0.5, d / hl);
-                            });
-                            points.push(val);
-                            if(isFocused) {
-                                if(i === 0) curD = val;
-                                if(val > maxP) maxP = val;
-                                if(i === 24) minF = val;
-                                if(i > 0 && nD === "MAI" && th > 0 && val <= th) {
-                                    nD = (t.toDateString() === now.toDateString() ? "Oggi" : t.toLocaleString('it-IT', {weekday:'short'})) + " ore " + t.getHours() + ":00";
-                                }
-                            }
-                        }
-                        datasets.push({
-                            label: name, data: points.map((v, i) => i <= past ? v : null),
-                            borderColor: color, borderWidth: isFocused ? 4 : 1.5, pointRadius: (i) => (isFocused && i === past) ? 6 : 0, pointBackgroundColor: color, fill: false, tension: 0.3
-                        });
-                        datasets.push({
-                            label: name + ' (Prev)', data: points.map((v, i) => i >= past ? v : null),
-                            borderColor: color, borderDash: [5, 5], borderWidth: isFocused ? 2 : 1, pointRadius: 0, fill: false, tension: 0.3
-                        });
-                    });
+        // Calcolo punti per tutto l'asse (Passato + Futuro)
+        for(let i = -past; i <= future; i++) {
+            const t = new Date(now.getTime() + (i * 3600000));
+            let val = 0;
+            this.logs.filter(l => l.compound_name === name).forEach(log => {
+                const diff = (t - new Date(log.timestamp)) / 3600000;
+                if(diff >= 0) val += log.mcg * Math.pow(0.5, diff / hl);
+            });
+            points.push(val);
 
-                    this.stats = { current: curD, peak: maxP, trough: minF, nextDoseTime: nD };
-                    this.chart = new Chart(canvas, {
-                        type: 'line', data: { labels, datasets },
-                        options: { 
-                            responsive: true, 
-                            plugins: { 
-                                legend: { display: true, labels: { color: '#94a3b8', font: { size: 8 }, filter: (item) => !item.text.includes('(Prev)') } } 
-                            },
-                            scales: { y: { display: false }, x: { grid: { color: (c) => c.tick.value === 0 ? "#3b82f6" : "transparent" }, ticks: { callback: (v) => v % 24 === 0 ? (v === 0 ? "Ora" : (v/24)+"g") : null, color: '#475569', font: { size: 8 } } } }
-                        }
-                    });
+            if(isFocused) {
+                if(val > tempMaxP) { tempMaxP = val; peakIdx = i + past; }
+                if(i === 0) curD = val;
+                if(i === 24) minF = val; // Minimo calcolato a +24h
+            }
+        }
+
+        if(isFocused) {
+            maxP = tempMaxP;
+            peakIdxGlobal = peakIdx;
+            troughIdxGlobal = past + 24;
+            
+            // Calcolo Next Dose Date
+            const th = (info && info.min_threshold > 0) ? info.min_threshold : maxP * 0.7;
+            for(let i = 1; i <= future; i++) {
+                if(points[i + past] <= th) {
+                    const tNext = new Date(now.getTime() + (i * 3600000));
+                    nD = (tNext.toDateString() === now.toDateString() ? "Oggi" : tNext.toLocaleString('it-IT', {weekday:'short'})) + " ore " + tNext.getHours() + ":00";
+                    break;
                 }
+            }
+        }
+
+        // LINEA PASSATA (Continua)
+        datasets.push({
+            label: name,
+            data: points.map((v, i) => i <= past ? v : null),
+            borderColor: color,
+            borderWidth: isFocused ? 4 : 1.5,
+            pointRadius: (ctx) => {
+                if(!isFocused) return 0;
+                return (ctx.dataIndex === past || ctx.dataIndex === peakIdxGlobal) ? 6 : 0;
             },
+            pointBackgroundColor: (ctx) => ctx.dataIndex === past ? '#3b82f6' : '#10b981', // Blu ora, Verde picco
+            tension: 0.3,
+            fill: false
+        });
+
+        // LINEA FUTURA (Tratteggiata)
+        datasets.push({
+            label: name + ' (Prev)',
+            data: points.map((v, i) => i >= past ? v : null),
+            borderColor: color,
+            borderDash: [5, 5],
+            borderWidth: isFocused ? 2 : 1,
+            pointRadius: (ctx) => (isFocused && ctx.dataIndex === troughIdxGlobal) ? 6 : 0,
+            pointBackgroundColor: '#ef4444', // Rosso minimo
+            tension: 0.3,
+            fill: false
+        });
+    });
+
+    this.stats = { current: curD, peak: maxP, trough: minF, nextDoseTime: nD };
+
+    this.chart = new Chart(canvas, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            plugins: { 
+                legend: { display: true, labels: { color: '#94a3b8', font: { size: 8 }, filter: (item) => !item.text.includes('(Prev)') } }
+            },
+            scales: {
+                y: { display: false, beginAtZero: true },
+                x: {
+                    grid: { color: (c) => c.tick.value === 0 ? "#3b82f6" : "transparent" },
+                    ticks: {
+                        callback: (v) => v % 24 === 0 ? (v === 0 ? "Ora" : (v/24) + "g") : null,
+                        color: '#475569', font: { size: 8 }
+                    }
+                }
+            }
+        }
+    });
+}
+
             mounted() { if(localStorage.getItem('biotracker_auth') === 'true') { this.isAuthenticated = true; this.loadData(); } this.setCurrentTime(); }
         }).mount('#app')
     </script>
 </body>
 </html>
+
 
