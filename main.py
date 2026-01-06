@@ -1,12 +1,13 @@
 import os
 from datetime import datetime
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 
 # Configurazione Database
+# Il nome del file biotracker.db garantisce la persistenza dei dati
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./biotracker.db")
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
@@ -15,6 +16,7 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} i
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+# --- MODELLI DATABASE ---
 class Compound(Base):
     __tablename__ = "compounds"
     id = Column(Integer, primary_key=True, index=True)
@@ -28,18 +30,25 @@ class InjectionLog(Base):
     id = Column(Integer, primary_key=True, index=True)
     compound_name = Column(String)
     mcg = Column(Float)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    # Rimosso il default forzato qui per gestire date manuali
+    timestamp = Column(DateTime)
 
+# Crea le tabelle solo se non esistono (Protezione Dati)
 Base.metadata.create_all(bind=engine)
+
 app = FastAPI()
 
+# Dipendenza per il Database
 def get_db():
     db = SessionLocal()
     try: yield db
     finally: db.close()
 
+# --- ROTTE API ---
+
 @app.get("/api/verify-password")
 def verify_password(password: str):
+    # La password predefinita è "biotracker" a meno che non la cambi nelle variabili d'ambiente
     if password == os.getenv("APP_PASSWORD", "biotracker"):
         return {"status": "ok"}
     raise HTTPException(status_code=401)
@@ -63,11 +72,29 @@ def delete_compound(id: int, db: Session = Depends(get_db)):
 
 @app.get("/api/logs")
 def get_logs(db: Session = Depends(get_db)):
+    # Ordina i log per data decrescente (i più recenti in alto)
     return db.query(InjectionLog).order_by(InjectionLog.timestamp.desc()).all()
 
+# --- FUNZIONE SALVATAGGIO CORRETTA CON DATA MANUALE ---
 @app.post("/api/logs")
-def save_log(name: str, dose: float, db: Session = Depends(get_db)):
-    db.add(InjectionLog(compound_name=name, mcg=dose))
+def save_log(name: str, dose: float, timestamp: str = Query(None), db: Session = Depends(get_db)):
+    # Se l'utente ha inviato una data manuale, la convertiamo
+    if timestamp:
+        try:
+            # Rimuoviamo eventuali 'Z' o fusi orari per compatibilità SQLite
+            clean_ts = timestamp.replace('Z', '').replace('T', ' ')
+            # Se la stringa è YYYY-MM-DD HH:MM la portiamo a YYYY-MM-DD HH:MM:SS
+            if len(clean_ts) == 16:
+                clean_ts += ":00"
+            dt_obj = datetime.strptime(clean_ts, '%Y-%m-%d %H:%M:%S')
+        except Exception as e:
+            print(f"Errore parsing data: {e}")
+            dt_obj = datetime.now()
+    else:
+        dt_obj = datetime.now()
+        
+    new_log = InjectionLog(compound_name=name, mcg=dose, timestamp=dt_obj)
+    db.add(new_log)
     db.commit()
     return {"status": "ok"}
 
@@ -77,9 +104,11 @@ def delete_log(id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "ok"}
 
+# Serve i file statici (l'HTML che abbiamo scritto finora)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 if __name__ == "__main__":
     import uvicorn
+    # Usa la porta definita dall'ambiente o la 8080 di default
     port = int(os.getenv("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
