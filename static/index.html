@@ -217,9 +217,23 @@
                     await this.loadData();
                 },
                 async checkPassword() {
-                    const res = await fetch(`/api/verify-password?password=${encodeURIComponent(this.passInput)}`);
-                    if(res.ok) { localStorage.setItem('biotracker_auth', 'true'); this.isAuthenticated = true; await this.loadData(); }
-                    else alert("PIN Errato");
+    console.log("Tentativo di sblocco con PIN:", this.passInput); // Debug nel browser
+    if (!this.passInput) return;
+
+    try {
+        const res = await fetch(`/api/verify-password?password=${encodeURIComponent(this.passInput)}`);
+        
+        if (res.ok) {
+            localStorage.setItem('biotracker_auth', 'true');
+            this.isAuthenticated = true;
+            await this.loadData();
+        } else {
+            alert("PIN Errato! Controlla le maiuscole o la variabile su Railway.");
+        }
+    } catch (error) {
+        console.error("Errore di connessione:", error);
+        alert("Errore di connessione al server. Riprova tra un momento.");
+    }
                 },
                 async loadData() {
                     const [cRes, lRes] = await Promise.all([fetch('/api/compounds'), fetch('/api/logs')]);
@@ -307,4 +321,5 @@ async saveEntry() {
     </script>
 </body>
 </html>
+
 
