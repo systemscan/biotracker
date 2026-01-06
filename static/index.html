@@ -229,13 +229,22 @@
                     this.renderChart();
                 },
                 async saveEntry() {
-                    if(!this.form.compound || !this.calcResult) return;
-                    const ts = new Date(this.form.customTimestamp).toISOString();
-                    await fetch(`/api/logs?name=${encodeURIComponent(this.form.compound.name)}&dose=${this.calcResult.dose_mcg}&timestamp=${encodeURIComponent(ts)}`, { method: 'POST' });
-                    localStorage.setItem('prefs_' + this.form.compound.name, JSON.stringify(this.form));
-                    await this.loadData();
-                    this.setCurrentTime();
-                },
+                // Cerca la funzione saveEntry() nello script in fondo al file HTML e sostituiscila con questa:
+async saveEntry() {
+    if(!this.form.compound || !this.calcResult) return;
+    
+    // Prendiamo la data scelta nel selettore (customTimestamp)
+    const ts = this.form.customTimestamp; 
+    
+    // Inviamo la data al server tramite l'URL
+    await fetch(`/api/logs?name=${encodeURIComponent(this.form.compound.name)}&dose=${this.calcResult.dose_mcg}&timestamp=${encodeURIComponent(ts)}`, { 
+        method: 'POST' 
+    });
+    
+    localStorage.setItem('prefs_' + this.form.compound.name, JSON.stringify(this.form));
+    await this.loadData();
+    this.setCurrentTime(); // Solo dopo il salvataggio torna all'ora attuale
+},
                 async deleteCompound(id) { if(confirm("Eliminare?")) { await fetch(`/api/compounds/${id}`, { method: 'DELETE' }); await this.loadData(); } },
                 async deleteLog(id) { if(confirm("Eliminare?")) { await fetch(`/api/logs/${id}`, { method: 'DELETE' }); await this.loadData(); } },
                 formatDate(d) { return new Date(d).toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}); },
@@ -298,3 +307,4 @@
     </script>
 </body>
 </html>
+
