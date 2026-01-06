@@ -48,10 +48,17 @@ def get_db():
 
 @app.get("/api/verify-password")
 def verify_password(password: str):
-    # La password predefinita è "biotracker" a meno che non la cambi nelle variabili d'ambiente
-    if password == os.getenv("APP_PASSWORD", "biotracker"):
+    # Legge la password SOLO dalle variabili di Railway.
+    # Se su Railway non è impostata, l'accesso sarà sempre negato (sicurezza totale del codice).
+    stored_password = os.environ.get("APP_PASSWORD")
+    
+    # Verifichiamo che la password esista su Railway e che coincida con quella inserita
+    if stored_password and password.strip() == stored_password.strip():
         return {"status": "ok"}
-    raise HTTPException(status_code=401)
+    
+    # Se la password è sbagliata o la variabile su Railway è vuota, blocca l'accesso
+    raise HTTPException(status_code=401, detail="Accesso negato")
+
 
 @app.get("/api/compounds")
 def get_compounds(db: Session = Depends(get_db)):
@@ -112,3 +119,4 @@ if __name__ == "__main__":
     # Usa la porta definita dall'ambiente o la 8080 di default
     port = int(os.getenv("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
