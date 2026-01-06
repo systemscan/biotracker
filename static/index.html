@@ -226,17 +226,13 @@
         if (res.ok) {
             localStorage.setItem('biotracker_auth', 'true');
             this.isAuthenticated = true;
-            // Usiamo un piccolo ritardo per assicurarci che l'HTML sia caricato prima di caricare i dati
-            setTimeout(async () => {
-                await this.loadData();
-            }, 100);
+            setTimeout(() => { this.loadData(); }, 200);
         } else {
             alert("PIN Errato!");
-            this.passInput = '';
         }
-    } catch (e) { 
-        alert("Errore di connessione al server."); 
-    }
+    } catch (e) { alert("Errore connessione."); }
+},
+
 },
                 async loadData() {
                     const [cRes, lRes] = await Promise.all([fetch('/api/compounds'), fetch('/api/logs')]);
@@ -378,6 +374,7 @@ datasets.push({
     </script>
 </body>
 </html>
+
 
 
 
