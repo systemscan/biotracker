@@ -23,7 +23,10 @@
             <div class="w-full max-w-xs">
                 <h1 class="text-5xl font-black text-blue-500 mb-2 italic tracking-tighter uppercase">BioTracker</h1>
                 <input type="password" v-model="passInput" placeholder="PIN" @keyup.enter="checkPassword" class="w-full bg-slate-800 p-5 rounded-3xl border-2 border-slate-700 text-center text-3xl mb-4 text-white outline-none">
-                <button @click="checkPassword" class="w-full bg-blue-600 p-5 rounded-3xl font-black uppercase text-white shadow-xl">Sblocca</button>
+                <button @click="checkPassword" class="w-full bg-blue-600 hover:bg-blue-500 p-5 rounded-3xl font-black uppercase text-white shadow-xl transition-all active:scale-95 relative z-50">
+    Sblocca
+</button>
+
             </div>
         </div>
 
@@ -375,6 +378,7 @@ datasets.push({
     </script>
 </body>
 </html>
+
 
 
 
