@@ -362,18 +362,16 @@ datasets.push({
                     ticks: {
                         callback: (v) => v % 24 === 0 ? (v === 0 ? "Ora" : (v/24) + "g") : null,
                         color: '#475569', font: { size: 8 }
-                    }
-                }
-            }
-        }
+                
     });
 }
-
+            },
             mounted() { if(localStorage.getItem('biotracker_auth') === 'true') { this.isAuthenticated = true; this.loadData(); } this.setCurrentTime(); }
         }).mount('#app')
     </script>
 </body>
 </html>
+
 
 
 
