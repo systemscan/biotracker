@@ -279,24 +279,41 @@
                             }
                         }
 
-                        datasets.push({
-                            label: name, data: points.map((v, i) => i <= 48 ? v : null),
-                            borderColor: color, borderWidth: isFocused ? 4 : 1.5,
-                            pointRadius: (ctx) => (isFocused && ctx.dataIndex === 48) ? 6 : 0,
-                            pointBackgroundColor: '#3b82f6', tension: 0.3, fill: false
-                        });
-                        datasets.push({
-                            label: name + ' (Prev)', data: points.map((v, i) => i >= 48 ? v : null),
-                            borderColor: color, borderDash: [5, 5], borderWidth: isFocused ? 2 : 1,
-                            pointRadius: (ctx) => {
-                                if (!isFocused) return 0;
-                                if (ctx.dataIndex === peakIdxGlobal) return 6;
-                                if (ctx.dataIndex === 48 + 24) return 6;
-                                return 0;
-                            },
-                            pointBackgroundColor: (ctx) => ctx.dataIndex === peakIdxGlobal ? '#10b981' : '#ef4444',
-                            tension: 0.3, fill: false
-                        });
+                        // 1. Linea PASSATA (fino a 48)
+datasets.push({
+    label: name,
+    data: points.map((v, i) => i <= 48 ? v : null),
+    borderColor: color,
+    borderWidth: isFocused ? 4 : 1.5,
+    pointRadius: (ctx) => {
+        if (!isFocused) return 0;
+        if (ctx.dataIndex === 48) return 6; // Pallino BLU (Ora)
+        if (ctx.dataIndex === peakIdxGlobal && peakIdxGlobal <= 48) return 6; // Pallino VERDE se nel passato
+        return 0;
+    },
+    pointBackgroundColor: (ctx) => ctx.dataIndex === 48 ? '#3b82f6' : '#10b981',
+    tension: 0.3,
+    fill: false
+});
+
+// 2. Linea FUTURA (da 48 in poi)
+datasets.push({
+    label: name + ' (Prev)',
+    data: points.map((v, i) => i >= 48 ? v : null),
+    borderColor: color,
+    borderDash: [5, 5],
+    borderWidth: isFocused ? 2 : 1,
+    pointRadius: (ctx) => {
+        if (!isFocused) return 0;
+        if (ctx.dataIndex === peakIdxGlobal && peakIdxGlobal > 48) return 6; // Pallino VERDE se nel futuro
+        if (ctx.dataIndex === 48 + 24) return 6; // Pallino ROSSO (Minimo)
+        return 0;
+    },
+    pointBackgroundColor: (ctx) => ctx.dataIndex === peakIdxGlobal ? '#10b981' : '#ef4444',
+    tension: 0.3,
+    fill: false
+});
+
                     });
 
                     this.stats = { current: curD, peak: maxP, trough: minF, nextDoseTime: nD };
@@ -318,3 +335,4 @@
     </script>
 </body>
 </html>
+
