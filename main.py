@@ -55,7 +55,9 @@ def get_db():
 
 @app.get("/api/verify-password")
 def verify_password(password: str = Query(...)):
-    stored_password = os.getenv("APP_PASSWORD", "biotracker")
+    stored_password = os.getenv("APP_PASSWORD")
+    if not stored_password:
+        stored_password = "biotracker" # Questa è la password di emergenza se Railway è vuota
     if password.strip() == stored_password.strip():
         return {"status": "ok"}
     raise HTTPException(status_code=401, detail="PIN Errato")
@@ -111,3 +113,4 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
