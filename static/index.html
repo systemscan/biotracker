@@ -139,13 +139,14 @@
                             <button @click="deleteCompound(c.id)" class="text-red-500 text-[9px] font-black border border-red-500/20 px-3 py-1 rounded-xl uppercase italic">Elimina</button>
                         </div>
                         <div class="pt-6 border-t border-slate-700 space-y-3">
-                            <input v-model="newComp.name" placeholder="Nome" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 text-sm font-bold text-white outline-none">
-                            <div class="grid grid-cols-2 gap-3">
-                                <input v-model="newComp.half_life" type="number" placeholder="HL (h)" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 text-sm font-bold text-white outline-none">
-                                <input v-model="newComp.threshold" type="number" placeholder="Soglia" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 text-sm font-bold text-white outline-none">
-                            </div>
-                            <button @click="addNewCompound" class="w-full bg-slate-100 text-slate-900 p-4 rounded-2xl font-black uppercase text-[10px]">Aggiungi</button>
-                        </div>
+    <input v-model="newComp.name" placeholder="Nome" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 text-sm font-bold text-white outline-none">
+    <div class="grid grid-cols-3 gap-3">
+        <input v-model="newComp.half_life" type="number" placeholder="HL (h)" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 text-sm font-bold text-white outline-none">
+        <input v-model="newComp.threshold" type="number" placeholder="Soglia" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 text-sm font-bold text-white outline-none">
+        <input v-model="newComp.t_max" type="number" placeholder="Picco (h)" class="w-full bg-slate-900 p-4 rounded-2xl border border-slate-700 text-sm font-bold text-white outline-none">
+    </div>
+    <button @click="addNewCompound" class="w-full bg-slate-100 text-slate-900 p-4 rounded-2xl font-black uppercase text-[10px]">Aggiungi alla Libreria</button>
+</div>
                     </div>
                 </details>
             </div>
@@ -224,12 +225,14 @@
                     this.setCurrentTime();
                 },
                 async addNewCompound() {
-                    if(!this.newComp.name) return;
-                    let th = (parseFloat(this.newComp.threshold) || 0) * 1000;
-                    await fetch(`/api/compounds/add?name=${encodeURIComponent(this.newComp.name)}&half_life=${this.newComp.half_life}&threshold=${th}`, { method: 'POST' });
-                    this.newComp = { name: '', half_life: 24, threshold: 0, thUnit: 'mg' };
-                    await this.loadData();
-                },
+    if(!this.newComp.name) return;
+    let th = (parseFloat(this.newComp.threshold) || 0) * 1000;
+    let tmax = parseFloat(this.newComp.t_max) || 0;
+    await fetch(`/api/compounds/add?name=${encodeURIComponent(this.newComp.name)}&half_life=${this.newComp.half_life}&threshold=${th}&tmax=${tmax}`, { method: 'POST' });
+    this.newComp = { name: '', half_life: 24, threshold: 0, t_max: 0 };
+    await this.loadData();
+},
+
                 async deleteCompound(id) { if(confirm("Eliminare?")) { await fetch(`/api/compounds/${id}`, { method: 'DELETE' }); await this.loadData(); } },
                 async deleteLog(id) { if(confirm("Eliminare?")) { await fetch(`/api/logs/${id}`, { method: 'DELETE' }); await this.loadData(); } },
                 formatDate(d) { return new Date(d).toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}); },
@@ -244,22 +247,27 @@
                     const datasets = [];
                     let maxP = 0, curD = 0, minF = 0, nD = "MAI", peakIdxGlobal = -1;
 
-                    uniqueNames.forEach((name, idx) => {
-                        const info = this.compounds.find(c => c.name === name);
-                        const hl = info ? info.half_life_hours : 24;
-                        const isFocused = name === this.selectedCompoundName;
-                        const color = this.chartColors[idx % 5];
-                        const points = [];
-                        let tempMaxP = 0, peakIdx = -1;
+                    // ... dentro uniqueNames.forEach ...
+const tmax = info && info.t_max ? info.t_max : 0; // Prende il Tmax dal database
 
-                        for(let i = -past; i <= future; i++) {
-                            const t = new Date(now.getTime() + (i * 3600000));
-                            let val = 0;
-                            this.logs.filter(l => l.compound_name === name).forEach(log => {
-                                const diff = (t - new Date(log.timestamp)) / 3600000;
-                                if(diff >= 0) val += log.mcg * Math.pow(0.5, diff / hl);
-                            });
-                            points.push(val);
+for(let i = -past; i <= future; i++) {
+    const t = new Date(now.getTime() + (i * 3600000));
+    let val = 0;
+    
+    this.logs.filter(l => l.compound_name === name).forEach(log => {
+        const diff = (t - new Date(log.timestamp)) / 3600000;
+        if(diff >= 0) {
+            if (diff < tmax) {
+                // FASE DI ASSORBIMENTO (sale fino al picco)
+                // Usiamo una crescita logistica o lineare per semplicità
+                val += log.mcg * (diff / tmax);
+            } else {
+                // FASE DI ELIMINAZIONE (scende dopo il picco)
+                val += log.mcg * Math.pow(0.5, (diff - tmax) / hl);
+            }
+        }
+    });
+    points.push(val);
                             if(isFocused) {
                                 if(val > tempMaxP) { tempMaxP = val; peakIdx = i + past; }
                                 if(i === 0) curD = val;
